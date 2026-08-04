@@ -1,0 +1,121 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(Collider2D))]
+public class WorldItem : MonoBehaviour
+{
+    [Header("Item")]
+    [SerializeField] private ItemData itemData;
+    [SerializeField, Min(1)] private int quantity = 1;
+
+    [Header("Visual")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
+
+    private readonly HashSet<Collider2D> playerCollidersInside = new();
+
+    private bool waitForPlayerExit;
+    private bool collected;
+
+    private void Awake()
+    {
+        Collider2D itemCollider = GetComponent<Collider2D>();
+        itemCollider.isTrigger = true;
+
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        }
+
+        RefreshVisual();
+    }
+
+    public void Initialize(ItemData newItemData, int newQuantity, bool requirePlayerExit)
+    {
+        itemData = newItemData;
+        quantity = Mathf.Max(1, newQuantity);
+        waitForPlayerExit = requirePlayerExit;
+        collected = false;
+
+        playerCollidersInside.Clear();
+        RefreshVisual();
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        InventorySystem inventory = other.GetComponentInParent<InventorySystem>();
+
+        if (inventory == null)
+        {
+            return;
+        }
+
+        playerCollidersInside.Add(other);
+        if (waitForPlayerExit)
+        {
+            return;
+        }
+
+        TryCollect(inventory);
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        if (!waitForPlayerExit)
+        {
+            return;
+        }
+
+        InventorySystem inventory = other.GetComponentInParent<InventorySystem>();
+        if (inventory != null)
+        {
+            playerCollidersInside.Add(other);
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        InventorySystem inventory = other.GetComponentInParent<InventorySystem>();
+        if (inventory == null)
+        {
+            return;
+        }
+        playerCollidersInside.Remove(other);
+
+        if (waitForPlayerExit && playerCollidersInside.Count == 0)
+        {
+            waitForPlayerExit = false;
+        }
+    }
+
+    private void TryCollect(InventorySystem inventory)
+    {
+        if (collected || itemData == null)
+        {
+            return;
+        }
+
+        if (inventory.AddItem(itemData, quantity))
+        {
+            collected = true;
+            Destroy(gameObject);
+        }
+    }
+
+    private void RefreshVisual()
+    {
+        if (spriteRenderer != null && itemData != null)
+        {
+            spriteRenderer.sprite = itemData.Icon;
+        }
+    }
+
+    private void OnValidate()
+    {
+        quantity = Mathf.Max(1, quantity);
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        }
+        RefreshVisual();
+    }
+}

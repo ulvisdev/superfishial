@@ -27,8 +27,9 @@ public class DepthSystem : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private Slider depthSlider;
-    [SerializeField] private TMP_Text currentDepthText;
-    [SerializeField] private TMP_Text depthLimitText;
+    // [SerializeField] private TMP_Text currentDepthText;
+    // [SerializeField] private TMP_Text depthLimitText;
+    [SerializeField] private TMP_Text depthText;
     [SerializeField] private TMP_Text dangerText;
     [SerializeField] private CanvasGroup blackoutCanvasGroup;
 
@@ -96,11 +97,11 @@ public class DepthSystem : MonoBehaviour
 
     private void UpdateDepthUI()
     {
-        if (currentDepthText != null)
-            currentDepthText.text = $"Depth: {CurrentDepth:0.0} m";
+        if (depthText != null)
+            depthText.text = $"Depth: {CurrentDepth:0.0}m / {maxSafeDepth:0.#}m";
 
-        if (depthLimitText != null)
-            depthLimitText.text = $"Limit: {maxSafeDepth:0.#} m";
+        // if (depthLimitText != null)
+        //     depthLimitText.text = $"Limit: {maxSafeDepth:0.#} m";
 
         if (depthSlider != null)
         {
