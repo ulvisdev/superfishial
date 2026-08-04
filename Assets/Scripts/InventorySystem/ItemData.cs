@@ -21,6 +21,11 @@ public class ItemData : ScriptableObject
     public Sprite Icon => icon;
     public GameObject WorldPrefab => worldPrefab;
 
+    [Header("Quest Item")]
+    [SerializeField] private bool isQuestItem;
+
+    public bool IsQuestItem => isQuestItem;
+
     private void OnValidate()
     {
         itemId = itemId.Trim();
