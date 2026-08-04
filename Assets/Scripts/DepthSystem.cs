@@ -3,6 +3,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Globalization;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class DepthSystem : MonoBehaviour
@@ -97,8 +98,7 @@ public class DepthSystem : MonoBehaviour
 
     private void UpdateDepthUI()
     {
-        if (depthText != null)
-            depthText.text = $"Depth: {CurrentDepth:0.0}m / {maxSafeDepth:0.#}m";
+        depthText.text = $"Depth: {CurrentDepth.ToString("0.0", CultureInfo.InvariantCulture)}m / {maxSafeDepth.ToString("0.#", CultureInfo.InvariantCulture)}m";
 
         // if (depthLimitText != null)
         //     depthLimitText.text = $"Limit: {maxSafeDepth:0.#} m";
