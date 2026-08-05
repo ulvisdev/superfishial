@@ -10,6 +10,7 @@ public class WorldItem : MonoBehaviour
 
     [Header("Visual")]
     [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private WorldItemVisuals visuals;
 
     private readonly HashSet<Collider2D> playerCollidersInside = new();
 
@@ -25,8 +26,17 @@ public class WorldItem : MonoBehaviour
         {
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         }
+        if (visuals == null)
+        {
+            visuals = GetComponent<WorldItemVisuals>();
+        }
 
         RefreshVisual();
+    }
+
+    private void Start()
+    {
+        UpdateQuestVisuals();
     }
 
     public void Initialize(ItemData newItemData, int newQuantity, bool requirePlayerExit)
@@ -118,4 +128,14 @@ public class WorldItem : MonoBehaviour
         }
         RefreshVisual();
     }
+
+    private void UpdateQuestVisuals()
+    {
+        if (visuals == null)
+            return;
+
+        bool isQuestItem = itemData != null && itemData.IsQuestItem;
+        visuals.SetQuestItem(isQuestItem);
+    }
+
 }

@@ -20,3 +20,4 @@ MonoBehaviour:
     craft conduits.
   icon: {fileID: 21300000, guid: c7fc3ab3971eac64f9490ac74e612edf, type: 3}
   worldPrefab: {fileID: 5302155045608368398, guid: 43d86223c60a9a74186f82c3d39aacc7, type: 3}
+  isQuestItem: 1
