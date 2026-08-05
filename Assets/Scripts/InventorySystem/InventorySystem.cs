@@ -101,6 +101,22 @@ public class InventorySystem : MonoBehaviour
         return true;
     }
 
+    public int GetItemCount(ItemData item)
+    {
+        if (item == null)
+        {
+            return 0;
+        }
+
+        InventoryStack stack = items.Find(stack => stack.item != null && stack.item.Id == item.Id);
+        return stack != null ? stack.quantity : 0;
+    }
+
+    public bool HasItem(ItemData item, int requiredQuantity = 1)
+    {
+        return GetItemCount(item) >= requiredQuantity;
+    }
+
     private void OnValidate()
     {
         rows = Mathf.Max(1, rows);
