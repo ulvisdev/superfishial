@@ -1,0 +1,105 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac8226f1d84236643b0ae3791486efe4, type: 3}
+  m_Name: EveryfishTest2
+  m_EditorClassIdentifier: 
+  DialogueContext: This is a test.
+  npcName:
+  - Everyfish
+  - Everyfish
+  - Everyfish
+  - Everyfish
+  - Everyfish
+  - Everyfish
+  - Everyfish
+  - Everyfish
+  - Everyfish
+  npcPortrait:
+  - {fileID: 12255890, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -149640682, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: 2007100102, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: 12255890, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -149640682, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -149640682, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: 2007100102, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  dialogueLine:
+  - You aren't supposed to be here.
+  - But you knew that already, didn't you?
+  - Excellent.
+  - How about doing me a favor then?
+  - Return to me once you've collected all of my hearts.
+  - That is a shame.
+  - Is that so?
+  - Your collection is incomplete.
+  - My gratitude to thee.
+  autoProgressLine: 000001000101010101
+  autoProgressDelay:
+  - 1.5
+  - 3
+  - 1.5
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  - 3
+  typingSpeed:
+  - 0.05
+  - 0.1
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.1
+  - 0.05
+  - 0.05
+  - 0.05
+  choices:
+  - dialogueIndex: 1
+    choices:
+    - Yeah
+    - Naw
+    nextDialogueIndexes: 0200000006000000
+    givesQuest: 0000
+  - dialogueIndex: 3
+    choices:
+    - Sure
+    - Nah I'm busy
+    nextDialogueIndexes: 0400000005000000
+    givesQuest: 0100
+  endsDialogue: 000000000101010101
+  voiceSound:
+  - {fileID: 8300000, guid: d4b55dd8a468fe14eaab78a390957c45, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  repeatingVoice: 000100000000000000
+  pitchType: 000000000100000000000000000000000000000000000000000000000100000000000000
+  voicePitch:
+  - 1
+  - 1
+  - 1.5
+  - 1
+  - 1
+  - 0.5
+  - 0.5
+  - 1
+  - 1.5
+  questInProgressIndex: 7
+  questCompletedIndex: 8
+  quest: {fileID: 11400000, guid: 6035b1cbd1f08ea4c9ffa47cccd38434, type: 2}

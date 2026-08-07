@@ -1,0 +1,145 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &6924231744070996864
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -5715738446069803987, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: Name
+      value: Nautilus Shell
+      objectReference: {fileID: 0}
+    - target: {fileID: -5715738446069803987, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: itemName
+      value: 'Nautilus Shell '
+      objectReference: {fileID: 0}
+    - target: {fileID: -5715738446069803987, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: IsQuestItem
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -5715738446069803987, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: itemDescription
+      value: Nautilus shells can be rarely obtained as a treasure item from fishing.
+        The drop chances of nautilus shells slightly increase with each level of
+        Luck of the Sea on the player's fishing rod.
+      objectReference: {fileID: 0}
+    - target: {fileID: -233406939130152266, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: c7fc3ab3971eac64f9490ac74e612edf, type: 3}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 48
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 48
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1339295631348553273, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2154646685621318125, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_Name
+      value: NautilusItem Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 3164613109031877606, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: c7fc3ab3971eac64f9490ac74e612edf, type: 3}
+    - target: {fileID: 3164613109031877606, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_SortingLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3507964389773091252, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: c7fc3ab3971eac64f9490ac74e612edf, type: 3}
+    - target: {fileID: 3586296429458880175, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: bounceCount
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586296429458880175, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: bounceHeight
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3586296429458880175, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: bounceDuration
+      value: 0.3
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
