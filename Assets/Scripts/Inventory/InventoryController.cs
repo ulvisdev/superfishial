@@ -57,6 +57,7 @@ public class InventoryController : MonoBehaviour
 
     public bool AddItem(GameObject itemPrefab)
     {
+        itemPrefab.GetComponent<Rigidbody2D>().gravityScale = 0;
         Item itemToAdd = itemPrefab.GetComponent<Item>();
         if (itemToAdd == null) return false;
 
