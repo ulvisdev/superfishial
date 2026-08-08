@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider2D))]
 public class WorldItem : MonoBehaviour
 {
     [Header("Item")]
@@ -12,24 +11,18 @@ public class WorldItem : MonoBehaviour
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private WorldItemVisuals visuals;
 
-    private readonly HashSet<Collider2D> playerCollidersInside = new();
+    private readonly HashSet<Collider> playerCollidersInside = new();
 
     private bool waitForPlayerExit;
     private bool collected;
 
     private void Awake()
     {
-        Collider2D itemCollider = GetComponent<Collider2D>();
-        itemCollider.isTrigger = true;
-
         if (spriteRenderer == null)
-        {
             spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        }
+
         if (visuals == null)
-        {
             visuals = GetComponent<WorldItemVisuals>();
-        }
 
         RefreshVisual();
     }
@@ -47,62 +40,54 @@ public class WorldItem : MonoBehaviour
         collected = false;
 
         playerCollidersInside.Clear();
+
         RefreshVisual();
+        UpdateQuestVisuals();
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerEnter(Collider other)
     {
         InventorySystem inventory = other.GetComponentInParent<InventorySystem>();
 
         if (inventory == null)
-        {
             return;
-        }
 
         playerCollidersInside.Add(other);
+
         if (waitForPlayerExit)
-        {
             return;
-        }
 
         TryCollect(inventory);
     }
 
-    private void OnTriggerStay2D(Collider2D other)
+    private void OnTriggerStay(Collider other)
     {
         if (!waitForPlayerExit)
-        {
             return;
-        }
 
         InventorySystem inventory = other.GetComponentInParent<InventorySystem>();
+
         if (inventory != null)
-        {
             playerCollidersInside.Add(other);
-        }
     }
 
-    private void OnTriggerExit2D(Collider2D other)
+    private void OnTriggerExit(Collider other)
     {
         InventorySystem inventory = other.GetComponentInParent<InventorySystem>();
+
         if (inventory == null)
-        {
             return;
-        }
+
         playerCollidersInside.Remove(other);
 
         if (waitForPlayerExit && playerCollidersInside.Count == 0)
-        {
             waitForPlayerExit = false;
-        }
     }
 
     private void TryCollect(InventorySystem inventory)
     {
         if (collected || itemData == null)
-        {
             return;
-        }
 
         if (inventory.AddItem(itemData, quantity))
         {
@@ -114,19 +99,7 @@ public class WorldItem : MonoBehaviour
     private void RefreshVisual()
     {
         if (spriteRenderer != null && itemData != null)
-        {
             spriteRenderer.sprite = itemData.Icon;
-        }
-    }
-
-    private void OnValidate()
-    {
-        quantity = Mathf.Max(1, quantity);
-        if (spriteRenderer == null)
-        {
-            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        }
-        RefreshVisual();
     }
 
     private void UpdateQuestVisuals()
@@ -138,4 +111,13 @@ public class WorldItem : MonoBehaviour
         visuals.SetQuestItem(isQuestItem);
     }
 
+    private void OnValidate()
+    {
+        quantity = Mathf.Max(1, quantity);
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
+        RefreshVisual();
+    }
 }
