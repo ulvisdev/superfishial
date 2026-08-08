@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Globalization;
 
-[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Rigidbody))]
 public class DepthSystem : MonoBehaviour
 {
     [Header("Depth")]
@@ -39,7 +39,7 @@ public class DepthSystem : MonoBehaviour
     [SerializeField] private float minimumDangerTimeForBreathFlash = 1.25f;
     [SerializeField, Range(0f, 1f)] private float breathFlashAlpha = 0.35f;
 
-    private Rigidbody2D rb;
+    private Rigidbody rb;
     private float dangerTimer;
 
     private bool wasTooDeep;
@@ -55,7 +55,7 @@ public class DepthSystem : MonoBehaviour
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody>();
 
         if (waterSurfaceReference == null || homeRespawnPoint == null || blackoutCanvasGroup == null)
         {
@@ -181,10 +181,10 @@ public class DepthSystem : MonoBehaviour
         if (playerMovementController != null)
             playerMovementController.enabled = false;
 
-        rb.linearVelocity = Vector2.zero;
-        rb.angularVelocity = 0f;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
         rb.position = homeRespawnPoint.position;
-        rb.rotation = 0f;
+        rb.rotation = Quaternion.identity;
 
         Physics2D.SyncTransforms();
 
