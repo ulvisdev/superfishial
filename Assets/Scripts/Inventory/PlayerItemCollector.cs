@@ -12,15 +12,15 @@ public class PlayerItemCollector : MonoBehaviour
         inventoryController = FindObjectOfType<InventoryController>();
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerEnter(Collider collision)
     {
         if (collision.CompareTag("Item"))
         {
             Item item = collision.GetComponent<Item>();
-            Rigidbody2D rb = collision.GetComponent<Rigidbody2D>();
+            Rigidbody rb = collision.GetComponent<Rigidbody>();
             if(item != null)
             {
-                rb.gravityScale = 0;
+                rb.useGravity = false;
                 //Add item inventory
                 bool itemAdded = inventoryController.AddItem(collision.gameObject);
 

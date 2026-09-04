@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Globalization;
 
-[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Rigidbody))]
 public class DepthSystem : MonoBehaviour
 {
     [Header("Depth")]
@@ -20,7 +20,7 @@ public class DepthSystem : MonoBehaviour
 
     [Header("Respawning")]
     [SerializeField] private Transform homeRespawnPoint;
-    [SerializeField] private MonoBehaviour playerMovementController;
+    [SerializeField] private PlayerMovement playerMovementController;
     [SerializeField] private float lastChanceDuration = 0.75f;
     [SerializeField] private float postTeleportBlackHold = 0.25f;
     [SerializeField] private float fadeFromBlackDuration = 1f;
@@ -39,7 +39,7 @@ public class DepthSystem : MonoBehaviour
     [SerializeField] private float minimumDangerTimeForBreathFlash = 1.25f;
     [SerializeField, Range(0f, 1f)] private float breathFlashAlpha = 0.35f;
 
-    private Rigidbody2D rb;
+    private Rigidbody rb;
     private float dangerTimer;
 
     private bool wasTooDeep;
@@ -55,7 +55,7 @@ public class DepthSystem : MonoBehaviour
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody>();
 
         if (waterSurfaceReference == null || homeRespawnPoint == null || blackoutCanvasGroup == null)
         {
@@ -179,14 +179,17 @@ public class DepthSystem : MonoBehaviour
             dangerText.gameObject.SetActive(false);
 
         if (playerMovementController != null)
-            playerMovementController.enabled = false;
+        {
+            playerMovementController.SetMovementEnabled(false);
+            playerMovementController.StopImmediately();
+        }
 
-        rb.linearVelocity = Vector2.zero;
-        rb.angularVelocity = 0f;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
         rb.position = homeRespawnPoint.position;
-        rb.rotation = 0f;
+        rb.rotation = Quaternion.identity;
 
-        Physics2D.SyncTransforms();
+        Physics.SyncTransforms();
 
         dangerTimer = 0f;
         wasTooDeep = false;
@@ -204,7 +207,7 @@ public class DepthSystem : MonoBehaviour
         // gameplay resumes before the screen fades back in
 
         if (playerMovementController != null)
-            playerMovementController.enabled = true;
+            playerMovementController.SetMovementEnabled(true);
 
         blackoutTween?.Kill();
         blackoutTween = blackoutCanvasGroup.DOFade(0f, fadeFromBlackDuration).SetEase(Ease.InOutSine).SetUpdate(true);
@@ -237,21 +240,21 @@ public class DepthSystem : MonoBehaviour
         isTransitioning = false;
     }
 
-private void PlayBreathFlash()
-{
-    if (breathFlashCanvasGroup == null)
-        return;
+    private void PlayBreathFlash()
+    {
+        if (breathFlashCanvasGroup == null)
+            return;
 
-    breathSequence?.Kill();
-    breathFlashCanvasGroup.DOKill();
-    breathFlashCanvasGroup.alpha = 0f;
+        breathSequence?.Kill();
+        breathFlashCanvasGroup.DOKill();
+        breathFlashCanvasGroup.alpha = 0f;
 
-    breathSequence = DOTween.Sequence();
-    for (int i = 0; i < 4; i++)
-        breathSequence.Append(breathFlashCanvasGroup.DOFade(breathFlashAlpha, 0.25f)
-            .SetEase(Ease.Linear)).Append(breathFlashCanvasGroup.DOFade(0f, 0.3f).SetEase(Ease.Linear));
-    breathSequence.SetUpdate(true);
-}
+        breathSequence = DOTween.Sequence();
+        for (int i = 0; i < 4; i++)
+            breathSequence.Append(breathFlashCanvasGroup.DOFade(breathFlashAlpha, 0.25f)
+                .SetEase(Ease.Linear)).Append(breathFlashCanvasGroup.DOFade(0f, 0.3f).SetEase(Ease.Linear));
+        breathSequence.SetUpdate(true);
+    }
 
     public void SetMaxSafeDepth(float newDepth)
     {

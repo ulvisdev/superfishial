@@ -17,13 +17,13 @@ public class InventoryController : MonoBehaviour
 
     void Awake()
     {
-        if(Instance != null && Instance != this)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
 
-        Instance = this; 
+        Instance = this;
     }
 
     [System.Obsolete]
@@ -40,10 +40,10 @@ public class InventoryController : MonoBehaviour
         foreach (Transform slotTransform in inventoryPanel.transform)
         {
             Slot slot = slotTransform.GetComponent<Slot>();
-            if(slot.currentItem != null)
+            if (slot.currentItem != null)
             {
                 Item item = slot.currentItem.GetComponent<Item>();
-                if(item != null)
+                if (item != null)
                 {
                     itemsCountCache[item.ID] = itemsCountCache.GetValueOrDefault(item.ID, 0) + item.quantity;
                 }
@@ -57,18 +57,24 @@ public class InventoryController : MonoBehaviour
 
     public bool AddItem(GameObject itemPrefab)
     {
-        itemPrefab.GetComponent<Rigidbody2D>().gravityScale = 0;
+        Rigidbody rb = itemPrefab.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.useGravity = false;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
         Item itemToAdd = itemPrefab.GetComponent<Item>();
         if (itemToAdd == null) return false;
 
         //Check if the item type is already in inventroy
-        foreach(Transform slotTransform in inventoryPanel.transform)
+        foreach (Transform slotTransform in inventoryPanel.transform)
         {
             Slot slot = slotTransform.GetComponent<Slot>();
             if (slot != null && slot.currentItem != null)
             {
                 Item slotItem = slot.currentItem.GetComponent<Item>();
-                if(slotItem != null && slotItem.ID == itemToAdd.ID)
+                if (slotItem != null && slotItem.ID == itemToAdd.ID)
                 {
                     //Same item, stack them
                     slotItem.AddToStack();
@@ -79,7 +85,7 @@ public class InventoryController : MonoBehaviour
         }
 
         //Look for empty slot
-        foreach(Transform slotTransform in inventoryPanel.transform)
+        foreach (Transform slotTransform in inventoryPanel.transform)
         {
             Slot slot = slotTransform.GetComponent<Slot>();
             if (slot != null && slot.currentItem == null)
@@ -99,16 +105,17 @@ public class InventoryController : MonoBehaviour
     public List<InventorySaveData> GetInventoryItems()
     {
         List<InventorySaveData> invData = new List<InventorySaveData>();
-        foreach(Transform slotTransform in inventoryPanel.transform)
+        foreach (Transform slotTransform in inventoryPanel.transform)
         {
             Slot slot = slotTransform.GetComponent<Slot>();
-            if(slot.currentItem != null)
+            if (slot.currentItem != null)
             {
                 Item item = slot.currentItem.GetComponent<Item>();
-                invData.Add(new InventorySaveData { 
-                    ItemID = item.ID, 
-                    slotIndex = slotTransform.GetSiblingIndex(), 
-                    quantity = item.quantity 
+                invData.Add(new InventorySaveData
+                {
+                    ItemID = item.ID,
+                    slotIndex = slotTransform.GetSiblingIndex(),
+                    quantity = item.quantity
                 });
             }
         }
@@ -118,36 +125,36 @@ public class InventoryController : MonoBehaviour
     public void SetInventoryItems(List<InventorySaveData> inventorySaveData)
     {
         //Clear inventory panel - avoid duplicates
-        foreach(Transform child in inventoryPanel.transform)
+        foreach (Transform child in inventoryPanel.transform)
         {
             Destroy(child.gameObject);
         }
 
         //Create new slots
-        for(int i=0; i < slotCount; i++)
+        for (int i = 0; i < slotCount; i++)
         {
             Instantiate(slotPrefab, inventoryPanel.transform);
         }
 
         //Populate slots with saved items
-        foreach(InventorySaveData data in inventorySaveData)
+        foreach (InventorySaveData data in inventorySaveData)
         {
-            if(data.slotIndex < slotCount)
+            if (data.slotIndex < slotCount)
             {
                 Slot slot = inventoryPanel.transform.GetChild(data.slotIndex).GetComponent<Slot>();
                 GameObject itemPrefab = itemDictionary.GetItemPrefab(data.ItemID);
-                if(itemPrefab != null)
+                if (itemPrefab != null)
                 {
                     GameObject item = Instantiate(itemPrefab, slot.transform);
                     item.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-                    
+
                     Item itemComponent = item.GetComponent<Item>();
-                    if(itemComponent != null && data.quantity > 1)
+                    if (itemComponent != null && data.quantity > 1)
                     {
                         itemComponent.quantity = data.quantity;
                         itemComponent.UpdateQuantityDisplay();
                     }
-                    
+
                     slot.currentItem = item;
                 }
             }
@@ -158,18 +165,18 @@ public class InventoryController : MonoBehaviour
 
     public void RemoveItemsFromInventory(int itemID, int amountToRemove)
     {
-        foreach(Transform slotTransform in inventoryPanel.transform)
+        foreach (Transform slotTransform in inventoryPanel.transform)
         {
-            if(amountToRemove <= 0) break;
+            if (amountToRemove <= 0) break;
 
             Slot slot = slotTransform.GetComponent<Slot>();
-            if(slot?.currentItem?.GetComponent<Item>() is Item item && item.ID == itemID)
+            if (slot?.currentItem?.GetComponent<Item>() is Item item && item.ID == itemID)
             {
                 int removed = Mathf.Min(amountToRemove, item.quantity);
                 item.RemoveFromStack(removed);
                 amountToRemove -= removed;
 
-                if(item.quantity == 0)
+                if (item.quantity == 0)
                 {
                     Destroy(slot.currentItem);
                     slot.currentItem = null;

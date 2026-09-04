@@ -87,27 +87,31 @@ public class ItemVisuals : MonoBehaviour
         visual.localScale = restingLocalScale;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter(Collision collision)
     {
         if (IsGroundCollision(collision)) StartGroundAnimation();
     }
 
-    private void OnCollisionStay2D(Collision2D collision)
+    private void OnCollisionStay(Collision collision)
     {
         if (IsGroundCollision(collision)) StartGroundAnimation();
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
+    private void OnCollisionExit(Collision collision)
     {
         if (IsGroundLayer(collision.gameObject)) StopGroundAnimation();
     }
 
-    private bool IsGroundCollision(Collision2D collision)
+    private bool IsGroundCollision(Collision collision)
     {
-        if (!IsGroundLayer(collision.gameObject)) return false;
+        if (!IsGroundLayer(collision.gameObject))
+            return false;
 
         for (int i = 0; i < collision.contactCount; i++)
-            if (collision.GetContact(i).normal.y > 0.5f) return true;
+        {
+            if (collision.GetContact(i).normal.y > 0.5f)
+                return true;
+        }
 
         return false;
     }
@@ -123,8 +127,8 @@ public class ItemVisuals : MonoBehaviour
 
         if (isQuestItem)
             if (!questParticles.isPlaying) questParticles.Play();
-        else
-            questParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            else
+                questParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
     private void OnDisable()

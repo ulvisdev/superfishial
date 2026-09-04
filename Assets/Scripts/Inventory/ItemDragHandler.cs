@@ -36,13 +36,13 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         transform.position = eventData.position; //Follow the mouse
     }
 
-public void OnEndDrag(PointerEventData eventData)
+    public void OnEndDrag(PointerEventData eventData)
     {
         canvasGroup.blocksRaycasts = true; //Enables raycasts
         canvasGroup.alpha = 1f; //No longer transparent
 
         Slot dropSlot = eventData.pointerEnter?.GetComponent<Slot>(); //Slot where item dropped
-        if(dropSlot == null)
+        if (dropSlot == null)
         {
             GameObject dropItem = eventData.pointerEnter;
             if (dropItem != null)
@@ -67,7 +67,7 @@ public void OnEndDrag(PointerEventData eventData)
                 Item draggedItem = GetComponent<Item>();
                 Item targetItem = dropSlot.currentItem.GetComponent<Item>();
 
-                if(draggedItem.ID == targetItem.ID)
+                if (draggedItem.ID == targetItem.ID)
                 {
                     targetItem.AddToStack(draggedItem.quantity);
                     originalSlot.currentItem = null;
@@ -145,15 +145,17 @@ public void OnEndDrag(PointerEventData eventData)
         }
 
         //Random drop position
-        Vector2 dropOffset = new Vector2(Random.Range(minDropDistance, maxDropDistance), 0);
-        Vector2 dropPosition = (Vector2)playerTransform.position + dropOffset;
+        Vector3 dropOffset = new Vector3(Random.Range(minDropDistance, maxDropDistance), 0f, 0f);
+        Vector3 dropPosition = playerTransform.position + dropOffset;
 
         //Instantiate drop item and bounce
         GameObject dropItem = Instantiate(gameObject, dropPosition, Quaternion.identity);
         Item droppedItem = dropItem.GetComponent<Item>();
         droppedItem.quantity = 1;
         dropItem.transform.localScale = new Vector3(1, 1, 1);
-        dropItem.GetComponent<Rigidbody2D>().gravityScale = 0.5f;
+        Rigidbody rb = dropItem.GetComponent<Rigidbody>();
+        if (rb != null)
+            rb.useGravity = true;
         dropItem.GetComponent<BounceEffect>().StartBounce();
 
         //Destroy the UI one

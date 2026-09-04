@@ -21,12 +21,12 @@ public class SoundEffectManager : MonoBehaviour
             randomPitchAudioSource = audioSources[1];
             voiceAudioSource = audioSources[2];
             soundEffectLibrary = GetComponent<SoundEffectLibrary>();
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad(gameObject);
         }
-        else
-        {
-            Destroy(gameObject);
-        }
+        // else
+        // {
+        //     Destroy(gameObject);
+        // }
     }
 
     public static void Play(string soundName, bool randomPitch = false)
