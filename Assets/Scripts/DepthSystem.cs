@@ -3,6 +3,7 @@ using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Globalization;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class DepthSystem : MonoBehaviour
@@ -27,8 +28,9 @@ public class DepthSystem : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private Slider depthSlider;
-    [SerializeField] private TMP_Text currentDepthText;
-    [SerializeField] private TMP_Text depthLimitText;
+    // [SerializeField] private TMP_Text currentDepthText;
+    // [SerializeField] private TMP_Text depthLimitText;
+    [SerializeField] private TMP_Text depthText;
     [SerializeField] private TMP_Text dangerText;
     [SerializeField] private CanvasGroup blackoutCanvasGroup;
 
@@ -96,11 +98,10 @@ public class DepthSystem : MonoBehaviour
 
     private void UpdateDepthUI()
     {
-        if (currentDepthText != null)
-            currentDepthText.text = $"Depth: {CurrentDepth:0.0} m";
+        depthText.text = $"Depth: {CurrentDepth.ToString("0.0", CultureInfo.InvariantCulture)}m / {maxSafeDepth.ToString("0.#", CultureInfo.InvariantCulture)}m";
 
-        if (depthLimitText != null)
-            depthLimitText.text = $"Limit: {maxSafeDepth:0.#} m";
+        // if (depthLimitText != null)
+        //     depthLimitText.text = $"Limit: {maxSafeDepth:0.#} m";
 
         if (depthSlider != null)
         {
