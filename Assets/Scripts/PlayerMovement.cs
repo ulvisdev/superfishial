@@ -96,6 +96,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (PauseController.IsGamePaused)
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
         if (moveAction != null)
         {
             moveInput = Vector2.ClampMagnitude(moveAction.action.ReadValue<Vector2>(), 1f);
