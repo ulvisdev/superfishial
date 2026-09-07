@@ -9,6 +9,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: -5715738446069803987, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: ID
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -5715738446069803987, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
       propertyPath: Name
       value: Nautilus Shell
       objectReference: {fileID: 0}
@@ -113,6 +117,10 @@ PrefabInstance:
     - target: {fileID: 2154646685621318125, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
       propertyPath: m_Name
       value: NautilusItem Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 2706652528455921356, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_UseGravity
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3164613109031877606, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
       propertyPath: m_Sprite

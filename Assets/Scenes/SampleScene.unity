@@ -5264,6 +5264,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dialogueData: {fileID: 11400000, guid: 36afce252aea4d24fa84cf92f825d527, type: 2}
+  playerMovement: {fileID: 1633555440}
 --- !u!65 &1251660248
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6584,8 +6585,8 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1404746724}
   visual: {fileID: 1404746725}
   moveAction: {fileID: -1680190386980627800, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  swimUpAction: {fileID: -3263176010007312452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  swimDownAction: {fileID: 5379454938952295261, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  swimUpAction: {fileID: 3662739506392308731, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  swimDownAction: {fileID: 1747854184245116355, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   walkSpeed: 3.5
   walkAcceleration: 35
   walkDeceleration: 50
@@ -6737,14 +6738,6 @@ MonoBehaviour:
     m_ActionId: 9caa3d8a-6b2f-4e8e-8bad-6ede561bd9be
     m_ActionName: UI/TrackedDeviceOrientation
   - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: d2d209fd-0100-4eed-a849-904dcbc5609b
-    m_ActionName: 'Player/SwimUp[/Keyboard/space]'
-  - m_PersistentCalls:
-      m_Calls: []
-    m_ActionId: 9beff4e6-b65e-4a3d-8aa2-3b577e20fa3f
-    m_ActionName: 'Player/SwimDown[/Keyboard/leftCtrl,/Keyboard/rightCtrl]'
-  - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1580446148}
         m_TargetAssemblyTypeName: InteractionDetector, Assembly-CSharp
@@ -6758,8 +6751,44 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-    m_ActionId: c2c8ba8a-d37d-4a2d-9a1e-895b63b4fbeb
+    m_ActionId: 852140f2-7766-474d-8707-702459ba45f3
     m_ActionName: 'Player/Interact[/Keyboard/e]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 2776c80d-3c14-4091-8c56-d04ced07a2b0
+    m_ActionName: 'Player/Previous[/Keyboard/1]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: b7230bb6-fc9b-4f52-8b25-f5e19cb2c2ba
+    m_ActionName: 'Player/Next[/Keyboard/2]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 641cd816-40e6-41b4-8c3d-04687c349290
+    m_ActionName: 'Player/Sprint[/Keyboard/leftShift]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 856768699}
+        m_TargetAssemblyTypeName: MenuController, Assembly-CSharp
+        m_MethodName: ToggleMenu
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: ebf1215a-8a7a-4b9b-980b-2bad6f51edb2
+    m_ActionName: 'Player/OpenMenu[/Keyboard/tab]'
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 697ec07c-c36d-483c-932d-c0a7e15361eb
+    m_ActionName: Player/SwimUp
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: 71201df2-59b0-4c70-87ee-1e65c0f2d6b7
+    m_ActionName: Player/SwimDown
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player

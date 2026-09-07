@@ -7,6 +7,7 @@ public class NPC : MonoBehaviour, iInteractable
 {
     public NewNPCDialogue dialogueData;
     private DialogueController dialogueUI;
+    public PlayerMovement playerMovement;
     private int dialogueIndex;
     private bool isTyping, isDialogueActive;
 
@@ -58,6 +59,9 @@ public class NPC : MonoBehaviour, iInteractable
         }
 
         isDialogueActive = true;
+
+        // Disable player movement
+        playerMovement.SetMovementEnabled(false);
 
         dialogueUI.ShowDialogueUI(true);
         PauseController.SetPause(true);
@@ -211,6 +215,9 @@ public class NPC : MonoBehaviour, iInteractable
         dialogueUI.SetDialogueText("");
         dialogueUI.ShowDialogueUI(false);
         PauseController.SetPause(false);
+
+        // Re-enable player movement
+        playerMovement.SetMovementEnabled(true);
     }
 
     void HandleQuestCompletion(Quest quest)
