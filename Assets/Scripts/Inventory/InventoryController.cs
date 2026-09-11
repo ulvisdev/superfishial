@@ -186,4 +186,26 @@ public class InventoryController : MonoBehaviour
 
         RebuildItemCounts();
     }
+
+    public int GetItemCount(int itemID)
+    {
+        if (itemsCountCache.TryGetValue(itemID, out int count))
+            return count;
+
+        return 0;
+    }
+
+    public bool HasItem(int itemID, int amount = 1)
+    {
+        return GetItemCount(itemID) >= amount;
+    }
+
+    public bool TryRemoveItem(int itemID, int amount = 1)
+    {
+        if (!HasItem(itemID, amount))
+            return false;
+
+        RemoveItemsFromInventory(itemID, amount);
+        return true;
+    }
 }

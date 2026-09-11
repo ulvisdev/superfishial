@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class InteractionDetector : MonoBehaviour
 {
     private iInteractable interactableInRange = null;
+
     public GameObject interactionIcon;
 
     void Start()
@@ -11,31 +12,43 @@ public class InteractionDetector : MonoBehaviour
         interactionIcon.SetActive(false);
     }
 
+    void Update()
+    {
+        if (interactableInRange == null)
+        {
+            interactionIcon.SetActive(false);
+            return;
+        }
+
+        interactionIcon.SetActive(interactableInRange.CanInteract());
+    }
+
     public void OnInteract(InputAction.CallbackContext context)
     {
-        if (context.started && interactableInRange != null)
-        {
-            interactableInRange.Interact();
-            if (!interactableInRange.CanInteract())
-                interactionIcon.SetActive(false);
-        }
+        if (!context.started)
+            return;
+
+        if (interactableInRange == null)
+            return;
+
+        if (!interactableInRange.CanInteract())
+            return;
+
+        interactableInRange.Interact();
     }
 
     void OnTriggerEnter(Collider collision)
     {
-        if (collision.TryGetComponent(out iInteractable interactable) && interactable.CanInteract())
-        {
+        if (collision.TryGetComponent(out iInteractable interactable))
             interactableInRange = interactable;
-            interactionIcon.SetActive(true);
-        }
     }
 
     void OnTriggerExit(Collider collision)
     {
-        if (collision.TryGetComponent(out iInteractable interactable) && interactable == interactableInRange)
+        if (collision.TryGetComponent(out iInteractable interactable))
         {
-            interactableInRange = null;
-            interactionIcon.SetActive(false);
+            if (interactable == interactableInRange)
+                interactableInRange = null;
         }
     }
 }
