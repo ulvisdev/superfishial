@@ -45,15 +45,15 @@ public class NPC : MonoBehaviour, iInteractable
         SyncQuestState();
 
         //Set dialogue line based on questState
-        if(questState == QuestState.NotStarted)
+        if (questState == QuestState.NotStarted)
         {
             dialogueIndex = 0;
         }
-        else if(questState == QuestState.InProgress)
+        else if (questState == QuestState.InProgress)
         {
             dialogueIndex = dialogueData.questInProgressIndex;
         }
-        else if(questState == QuestState.Completed)
+        else if (questState == QuestState.Completed)
         {
             dialogueIndex = dialogueData.questCompletedIndex;
         }
@@ -75,10 +75,10 @@ public class NPC : MonoBehaviour, iInteractable
 
         string questID = dialogueData.quest.questID;
 
-        if(QuestController.Instance.IsQuestCompleted(questID) || QuestController.Instance.IsQuestHandedIn(questID))
+        if (QuestController.Instance.IsQuestCompleted(questID) || QuestController.Instance.IsQuestHandedIn(questID))
         {
             questState = QuestState.Completed;
-        } 
+        }
         else if (QuestController.Instance.IsQuestActive(questID))
         {
             questState = QuestState.InProgress;
@@ -95,7 +95,7 @@ public class NPC : MonoBehaviour, iInteractable
         {
             // Skip typing animation and show the full line
             StopAllCoroutines();
-            dialogueUI.SetDialogueText(dialogueData.dialogueLine[dialogueIndex]);
+            DialogueController.Instance.dialogueVertexAnimator.SkipToEndOfCurrentMessage();
             isTyping = false;
         }
 
@@ -139,14 +139,12 @@ public class NPC : MonoBehaviour, iInteractable
 
         if (!dialogueData.repeatingVoice[dialogueIndex])
         {
-            if (dialogueData.pitchType[dialogueIndex] == PitchType.Random)
-            {
-                SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], true);
-            }
-            else
-            {
-                SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex]);
-            }
+            SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], dialogueData.RandomPitch[dialogueIndex]);
+            DialogueController.Instance.PlayDialogue(dialogueData.dialogueLine[dialogueIndex], null);
+        }
+        else
+        {
+            DialogueController.Instance.PlayDialogue(dialogueData.dialogueLine[dialogueIndex], dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], dialogueData.RandomPitch[dialogueIndex]);
         }
 
         foreach (char letter in dialogueData.dialogueLine[dialogueIndex])
@@ -154,7 +152,7 @@ public class NPC : MonoBehaviour, iInteractable
             dialogueUI.SetDialogueText(dialogueUI.dialogueText.text += letter);
             if (dialogueData.repeatingVoice[dialogueIndex])
             {
-                if (dialogueData.pitchType[dialogueIndex] == PitchType.Random)
+                if (dialogueData.RandomPitch[dialogueIndex])
                 {
                     SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], true);
                 }
@@ -205,7 +203,7 @@ public class NPC : MonoBehaviour, iInteractable
 
     public void EndDialogue()
     {
-        if(questState == QuestState.Completed && !QuestController.Instance.IsQuestHandedIn(dialogueData.quest.questID))
+        if (questState == QuestState.Completed && !QuestController.Instance.IsQuestHandedIn(dialogueData.quest.questID))
         {
             HandleQuestCompletion(dialogueData.quest);
         }

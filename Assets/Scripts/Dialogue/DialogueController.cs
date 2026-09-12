@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,10 +13,21 @@ public class DialogueController : MonoBehaviour
     public Transform choiceContainer;
     public GameObject choiceButtonPrefab;
 
+    public DialogueVertexAnimator dialogueVertexAnimator;
+
     void Awake()
     {
+        dialogueVertexAnimator = new DialogueVertexAnimator(dialogueText);
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+    }
+
+    private Coroutine typeRoutine = null;
+    public void PlayDialogue(string message, AudioClip voiceClip, float voicePitch = 1, bool randomPitch = false) {
+        this.EnsureCoroutineStopped(ref typeRoutine);
+        dialogueVertexAnimator.textAnimating = false;
+        List<DialogueCommand> commands = DialogueUtility.ProcessInputString(message, out string totalTextMessage);
+        typeRoutine = StartCoroutine(dialogueVertexAnimator.AnimateTextIn(commands, totalTextMessage, null, voiceClip, voicePitch, randomPitch));
     }
 
     public void ShowDialogueUI(bool show)
