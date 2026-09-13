@@ -5168,7 +5168,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f7484f6d2ae52443b9aeef1b0476dec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 69
+  ID: 3
   itemName: Wedding Ring
   itemDescription: An old wedding ring, caked in mud.
   quantity: 1

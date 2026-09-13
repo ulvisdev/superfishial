@@ -60,6 +60,8 @@ public class PlayerMovement : MonoBehaviour
     private float timeSinceGrounded;
 
     private bool movementEnabled = true;
+    private bool preserveAnimationAfterUnfreeze = false;
+    private float previousAnimatorSpeed = 1f;
 
     private Vector2 lastSwimDirection = Vector2.up;
 
@@ -89,38 +91,33 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        ReadInput();
-        UpdateSwimmingRotation();
-
-        if (PauseController.IsGamePaused)
+        if (!movementEnabled || PauseController.IsGamePaused)
         {
-            rb.linearVelocity = Vector2.zero;
+            rb.linearVelocity = Vector3.zero;
             return;
         }
 
+        ReadInput();
+        UpdateSwimmingRotation();
         UpdateSpriteFlip();
         UpdateAnimator();
     }
 
     private void FixedUpdate()
     {
+        if (!movementEnabled || PauseController.IsGamePaused)
+        {
+            rb.linearVelocity = Vector3.zero;
+            return;
+        }
 
         UpdateGroundCheck();
         UpdateMovementState();
 
-        if (!movementEnabled)
-        {
-            return;
-        }
-
         if (currentState == MovementState.Grounded)
-        {
             GroundMovement();
-        }
         else
-        {
             SwimMovement();
-        }
     }
 
     private void ReadInput()
@@ -154,7 +151,7 @@ public class PlayerMovement : MonoBehaviour
         {
             verticalInput -= 1f;
         }
-    
+
     }
 
     private void GroundMovement()
@@ -309,8 +306,22 @@ public class PlayerMovement : MonoBehaviour
     private void UpdateAnimator()
     {
         if (animator == null)
-        {
             return;
+
+        if (preserveAnimationAfterUnfreeze)
+        {
+            bool hasInput = Mathf.Abs(horizontalInput) > 0.01f || Mathf.Abs(depthInput) > 0.01f || Mathf.Abs(verticalInput) > 0.01f;
+            float relevantSpeed;
+
+            if (currentState == MovementState.Grounded)
+                relevantSpeed = new Vector2(rb.linearVelocity.x, rb.linearVelocity.z).magnitude;
+            else
+                relevantSpeed = rb.linearVelocity.magnitude;
+
+            if (hasInput && relevantSpeed < 0.01f)
+                return;
+
+            preserveAnimationAfterUnfreeze = false;
         }
 
         Vector3 velocity = rb.linearVelocity;
@@ -332,8 +343,26 @@ public class PlayerMovement : MonoBehaviour
             horizontalInput = 0f;
             depthInput = 0f;
             verticalInput = 0f;
+
             rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
+        else
+            preserveAnimationAfterUnfreeze = true;
+    }
+
+    public void SetAnimationFrozen(bool frozen)
+    {
+        if (animator == null)
+            return;
+
+        if (frozen)
+        {
+            previousAnimatorSpeed = animator.speed;
+            animator.speed = 0f;
+        }
+        else
+            animator.speed = previousAnimatorSpeed;
     }
 
     public void StopImmediately()

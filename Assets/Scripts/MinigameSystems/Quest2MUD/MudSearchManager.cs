@@ -21,6 +21,7 @@ public class MudSearchManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private GameObject searchPanel;
+    [SerializeField] private GameObject instructionsPanel;
     [SerializeField] private RectTransform searchArea;
     [SerializeField] private TMP_Text statusText;
 
@@ -39,27 +40,21 @@ public class MudSearchManager : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] private float junkChance = 0.7f;
 
-    [Header("Player")]
-    [SerializeField] private MonoBehaviour playerMovementController;
-    [SerializeField] private Rigidbody playerRigidbody;
-
     [Header("Ring Found")]
     [SerializeField] private float ringFoundCloseDelay = 1.5f;
 
     private bool closingAfterRing = false;
-    private RigidbodyConstraints previousRigidbodyConstraints;
 
     private int ringSpotID = -1;
 
     private bool questActive = false;
     private bool ringFound = false;
     private bool panelOpen = false;
+    private bool instructionsSeen = false;
 
     private MudSearchSpot currentSpot;
 
     private int patchesRemaining = 0;
-
-    private bool movementWasEnabled;
 
     private List<Vector2> generatedPositions = new List<Vector2>();
 
@@ -78,6 +73,9 @@ public class MudSearchManager : MonoBehaviour
     {
         if (searchPanel != null)
             searchPanel.SetActive(false);
+
+        if (instructionsPanel != null)
+            instructionsPanel.SetActive(false);
 
         if (startQuestAutomaticallyForTesting)
             BeginQuest();
@@ -142,8 +140,39 @@ public class MudSearchManager : MonoBehaviour
         currentSpot = spot;
         panelOpen = true;
 
-        FreezePlayer();
+        PlayerFreeze.Instance.FreezePlayer();
 
+        if (!instructionsSeen)
+        {
+            OpenInstructions();
+            return;
+        }
+
+        OpenSearchPanel();
+    }
+
+    private void OpenInstructions()
+    {
+        searchPanel.SetActive(false);
+        instructionsPanel.SetActive(true);
+    }
+
+    public void PressInstructionsGo()
+    {
+        if (!panelOpen)
+            return;
+
+        if (currentSpot == null)
+            return;
+
+        instructionsSeen = true;
+        instructionsPanel.SetActive(false);
+        OpenSearchPanel();
+    }
+
+    private void OpenSearchPanel()
+    {
+        instructionsPanel.SetActive(false);
         searchPanel.SetActive(true);
 
         Canvas.ForceUpdateCanvases();
@@ -151,7 +180,7 @@ public class MudSearchManager : MonoBehaviour
         ClearOldPatches();
         GeneratePatches();
 
-        SetStatus("Search through the mud...");
+        SetStatus("SEARCHING...");
     }
 
     private void GeneratePatches()
@@ -316,6 +345,7 @@ public class MudSearchManager : MonoBehaviour
     private void CloseSearch()
     {
         searchPanel.SetActive(false);
+        instructionsPanel.SetActive(false);
 
         ClearOldPatches();
 
@@ -323,40 +353,13 @@ public class MudSearchManager : MonoBehaviour
         closingAfterRing = false;
         currentSpot = null;
 
-        UnfreezePlayer();
+        PlayerFreeze.Instance.UnfreezePlayer();
     }
 
     private void ClearOldPatches()
     {
         foreach (Transform child in searchArea)
             Destroy(child.gameObject);
-    }
-
-    private void FreezePlayer()
-    {
-        if (playerMovementController != null)
-        {
-            movementWasEnabled = playerMovementController.enabled;
-            playerMovementController.enabled = false;
-        }
-
-        if (playerRigidbody != null)
-        {
-            playerRigidbody.linearVelocity = Vector3.zero;
-            playerRigidbody.angularVelocity = Vector3.zero;
-
-            previousRigidbodyConstraints = playerRigidbody.constraints;
-            playerRigidbody.constraints = RigidbodyConstraints.FreezeAll;
-        }
-    }
-
-    private void UnfreezePlayer()
-    {
-        if (playerMovementController != null)
-            playerMovementController.enabled = movementWasEnabled;
-
-        if (playerRigidbody != null)
-            playerRigidbody.constraints = previousRigidbodyConstraints;
     }
 
     private void SetStatus(string message)

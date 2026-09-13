@@ -122,6 +122,10 @@ PrefabInstance:
       propertyPath: m_UseGravity
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2706652528455921356, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
+      propertyPath: m_Constraints
+      value: 112
+      objectReference: {fileID: 0}
     - target: {fileID: 3164613109031877606, guid: 09803ca86dde80f4a847850dc416c959, type: 3}
       propertyPath: m_Sprite
       value: 

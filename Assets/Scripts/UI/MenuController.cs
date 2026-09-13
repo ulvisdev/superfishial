@@ -15,15 +15,21 @@ public class MenuController : MonoBehaviour
 
     public void ToggleMenu(InputAction.CallbackContext context)
     {
-        if (context.performed)
-        {
-            if(!menuCanvas.activeSelf && PauseController.IsGamePaused)
-            {
-                return;
-            }
-            menuCanvas.SetActive(!menuCanvas.activeSelf);
-            PauseController.SetPause(menuCanvas.activeSelf);
-        }
+        if (!context.performed)
+            return;
+
+        if (!menuCanvas.activeSelf && PauseController.IsGamePaused)
+            return;
+
+        bool openingMenu = !menuCanvas.activeSelf;
+
+        if (openingMenu)
+            PlayerFreeze.Instance.FreezePlayer();
+        else
+            PlayerFreeze.Instance.UnfreezePlayer();
+
+        menuCanvas.SetActive(openingMenu);
+        PauseController.SetPause(openingMenu);
     }
 
     public void ShowItemDetails(string itemName, string itemDesc)
