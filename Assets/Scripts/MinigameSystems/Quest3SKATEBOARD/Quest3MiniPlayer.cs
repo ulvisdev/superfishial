@@ -1,27 +1,26 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 public class Quest3MiniPlayer : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private RectTransform playArea;
     [SerializeField] private RectTransform hitbox;
-    [SerializeField] private Animator animator;
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 300f;
+    [SerializeField] private float acceleration = 900f;
+    [SerializeField] private float deceleration = 1200f;
 
     [Header("Hitbox")]
-    [SerializeField] private Vector2 idleHitboxSize = new Vector2(35f, 125f);
-    [SerializeField] private Vector2 swimHitboxSize = new Vector2(125f, 35f);
+    [SerializeField] private Vector2 hitboxSize = new Vector2(55f, 30f);
 
     private RectTransform rectTransform;
     private Vector2 startPosition;
     private Vector3 startScale;
+    private Vector2 currentVelocity;
 
     private bool movementEnabled = false;
-    private bool isSwimming = false;
     private bool facingRight = true;
 
     void Awake()
@@ -30,7 +29,8 @@ public class Quest3MiniPlayer : MonoBehaviour
         startPosition = rectTransform.anchoredPosition;
         startScale = rectTransform.localScale;
 
-        UpdateVisuals(false);
+        if (hitbox != null)
+            hitbox.sizeDelta = hitboxSize;
     }
 
     void Update()
@@ -60,30 +60,18 @@ public class Quest3MiniPlayer : MonoBehaviour
         if (input.sqrMagnitude > 1f)
             input.Normalize();
 
-        bool swimmingNow = input.sqrMagnitude > 0f;
-
         if (input.x > 0f)
             SetFacingDirection(true);
         else if (input.x < 0f)
             SetFacingDirection(false);
 
-        if (swimmingNow != isSwimming)
-            UpdateVisuals(swimmingNow);
+        Vector2 targetVelocity = input * moveSpeed;
+        float movementRate = input.sqrMagnitude > 0f ? acceleration : deceleration;
 
-        rectTransform.anchoredPosition += input * moveSpeed * Time.unscaledDeltaTime;
+        currentVelocity = Vector2.MoveTowards(currentVelocity, targetVelocity, movementRate * Time.unscaledDeltaTime);
+        rectTransform.anchoredPosition += currentVelocity * Time.unscaledDeltaTime;
 
         ClampToPlayArea();
-    }
-
-    private void UpdateVisuals(bool swimming)
-    {
-        isSwimming = swimming;
-
-        if (animator != null)
-            animator.SetBool("isSwimming", swimming);
-
-        if (hitbox != null)
-            hitbox.sizeDelta = swimming ? swimHitboxSize : idleHitboxSize;
     }
 
     private void SetFacingDirection(bool right)
@@ -100,10 +88,10 @@ public class Quest3MiniPlayer : MonoBehaviour
     private void ClampToPlayArea()
     {
         Vector2 position = rectTransform.anchoredPosition;
+        Vector2 originalPosition = position;
 
         float halfWidth = rectTransform.rect.width * 0.5f;
         float halfHeight = rectTransform.rect.height * 0.5f;
-
         float minimumX = playArea.rect.xMin + halfWidth;
         float maximumX = playArea.rect.xMax - halfWidth;
         float minimumY = playArea.rect.yMin + halfHeight;
@@ -112,20 +100,43 @@ public class Quest3MiniPlayer : MonoBehaviour
         position.x = Mathf.Clamp(position.x, minimumX, maximumX);
         position.y = Mathf.Clamp(position.y, minimumY, maximumY);
 
+        if (position.x != originalPosition.x)
+            currentVelocity.x = 0f;
+
+        if (position.y != originalPosition.y)
+            currentVelocity.y = 0f;
+
         rectTransform.anchoredPosition = position;
+    }
+
+    public void PauseMinigame()
+    {
+        movementEnabled = false;
+        currentVelocity = Vector2.zero;
+    }
+
+    public void ResumeMinigame()
+    {
+        movementEnabled = true;
     }
 
     public void BeginMinigame()
     {
         rectTransform.anchoredPosition = startPosition;
+        currentVelocity = Vector2.zero;
         movementEnabled = true;
-        UpdateVisuals(false);
     }
 
     public void StopMinigame()
     {
         movementEnabled = false;
-        UpdateVisuals(false);
+        currentVelocity = Vector2.zero;
+    }
+
+    public void ResetPosition()
+    {
+        rectTransform.anchoredPosition = startPosition;
+        currentVelocity = Vector2.zero;
     }
 
     public RectTransform GetHitbox()
