@@ -15,15 +15,78 @@ public class DialogueController : MonoBehaviour
 
     public DialogueVertexAnimator dialogueVertexAnimator;
 
+    [Header("Text Effects")]
+    public DialogueTextEffects dialogueTextEffects;
+
+    // void Awake()
+    // {
+    //     dialogueVertexAnimator = new DialogueVertexAnimator(dialogueText);
+    //     if (Instance == null) Instance = this;
+    //     else Destroy(gameObject);
+    // }
+
     void Awake()
     {
         dialogueVertexAnimator = new DialogueVertexAnimator(dialogueText);
+
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        if (dialogueTextEffects == null)
+            dialogueTextEffects = dialogueText.GetComponent<DialogueTextEffects>();
+    }
+
+    public void PrepareDialogueText(string text)
+    {
+        if (dialogueTextEffects != null)
+            dialogueTextEffects.PrepareText(text);
+        else
+            dialogueText.text = text;
+    }
+
+    public int GetDialogueCharacterCount()
+    {
+        if (dialogueTextEffects == null)
+            return 0;
+
+        return dialogueTextEffects.GetCharacterCount();
+    }
+
+    public char GetDialogueCharacter(int index)
+    {
+        if (dialogueTextEffects == null)
+            return ' ';
+
+        return dialogueTextEffects.GetCharacter(index);
+    }
+
+    public void RevealDialogueCharacter(int index)
+    {
+        if (dialogueTextEffects != null)
+            dialogueTextEffects.RevealCharacter(index);
+    }
+
+    public void ShowAllDialogueText()
+    {
+        if (dialogueTextEffects != null)
+            dialogueTextEffects.ShowAll();
+    }
+
+    public void ClearDialogueText()
+    {
+        if (dialogueTextEffects != null)
+            dialogueTextEffects.Clear();
+        else
+            dialogueText.text = "";
     }
 
     private Coroutine typeRoutine = null;
-    public void PlayDialogue(string message, AudioClip voiceClip, float voicePitch = 1, bool randomPitch = false) {
+    public void PlayDialogue(string message, AudioClip voiceClip, float voicePitch = 1, bool randomPitch = false)
+    {
         this.EnsureCoroutineStopped(ref typeRoutine);
         dialogueVertexAnimator.textAnimating = false;
         List<DialogueCommand> commands = DialogueUtility.ProcessInputString(message, out string totalTextMessage);

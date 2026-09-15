@@ -7491,6 +7491,7 @@ GameObject:
   - component: {fileID: 1869025829}
   - component: {fileID: 1869025831}
   - component: {fileID: 1869025830}
+  - component: {fileID: 1869025832}
   m_Layer: 0
   m_Name: DialogueText
   m_TagString: Untagged
@@ -7616,6 +7617,27 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1869025828}
   m_CullTransparentMesh: 1
+--- !u!114 &1869025832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1869025828}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 539046cede25e3e448e67c676ded444d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  popScale: 1.35
+  popDuration: 0.08
+  shakeStrength: 2
+  shakeSpeed: 18
+  waveAmplitude: 3
+  waveSpeed: 5
+  waveFrequency: 0.6
+  itemColor: {r: 1, g: 0.8, b: 0.15, a: 1}
+  dangerColor: {r: 1, g: 0.2, b: 0.2, a: 1}
 --- !u!1 &1934473803
 GameObject:
   m_ObjectHideFlags: 0
@@ -8350,6 +8372,7 @@ MonoBehaviour:
   portraitImage: {fileID: 969069760}
   choiceContainer: {fileID: 148919744}
   choiceButtonPrefab: {fileID: 6869800740079524738, guid: b91b03ca276f46241b62daf529f772ab, type: 3}
+  dialogueTextEffects: {fileID: 0}
 --- !u!1 &2092318208
 GameObject:
   m_ObjectHideFlags: 0
