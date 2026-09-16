@@ -5223,10 +5223,10 @@ MonoBehaviour:
   entranceSpeed: 250
   driftSpeed: 25
   leftStopPadding: 80
-  pushSpeed: 180
-  pushAcceleration: 700
-  pushDeceleration: 500
-  pushHoldDuration: 0.15
+  pushSpeed: 320
+  pushAcceleration: 800
+  pushDeceleration: 600
+  pushHoldDuration: 0.2
   pushInvulnerabilityDuration: 0.2
   verticalEdgePadding: 40
   bobAmount: 15
