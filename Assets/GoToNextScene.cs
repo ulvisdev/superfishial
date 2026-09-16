@@ -10,7 +10,7 @@ public class GoToNextScene : MonoBehaviour
         StartCoroutine(NextScene());
     }
 
-    // Update is called once per frame
+
     void Update()
     {
         
@@ -18,7 +18,7 @@ public class GoToNextScene : MonoBehaviour
 
     IEnumerator NextScene()
     {
-        yield return new WaitForSeconds(8.3f);
+        yield return new WaitForSeconds(32f);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 }
