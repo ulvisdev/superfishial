@@ -43,7 +43,7 @@ public class Quest6DirtEraser : MonoBehaviour
         if (Mouse.current == null) return;
         if (cleaningManager == null) return;
 
-        if (!cleaningManager.IsSpongeSelected())
+        if (!cleaningManager.CanUseTools() || !cleaningManager.IsSpongeSelected())
         {
             hasLastSpongePixel = false;
             return;
@@ -51,6 +51,11 @@ public class Quest6DirtEraser : MonoBehaviour
 
         if (Mouse.current.leftButton.isPressed) TryScrub(Mouse.current.position.ReadValue());
         else hasLastSpongePixel = false;
+    }
+
+    public void RevealCleanStatue()
+    {
+        dirtyImage.gameObject.SetActive(false);
     }
 
     public Vector2 GetSpongeUISize()
@@ -109,13 +114,14 @@ public class Quest6DirtEraser : MonoBehaviour
         if (pixel == lastSpongePixel)
             return;
 
-        EraseLine(lastSpongePixel, pixel);
+        EraseLine(lastSpongePixel, pixel, screenPosition);
         lastSpongePixel = pixel;
     }
 
-    void EraseLine(Vector2Int from, Vector2Int to)
+    void EraseLine(Vector2Int from, Vector2Int to, Vector2 screenPosition)
     {
         HashSet<int> touchedPixels = new HashSet<int>();
+        float removedThisStroke = 0f;
         float distance = Vector2.Distance(from, to);
         float movementStrength = Mathf.Clamp(distance / 2f, 0.7f, 1.6f);
         int steps = Mathf.Max(1, Mathf.CeilToInt(distance));
@@ -125,11 +131,13 @@ public class Quest6DirtEraser : MonoBehaviour
             float t = (float)i / steps;
             int x = Mathf.RoundToInt(Mathf.Lerp(from.x, to.x, t));
             int y = Mathf.RoundToInt(Mathf.Lerp(from.y, to.y, t));
-            EraseCircle(x, y, touchedPixels, movementStrength);
+            EraseCircle(x, y, touchedPixels, movementStrength, ref removedThisStroke);
         }
 
         runtimeTexture.SetPixels(pixels);
         runtimeTexture.Apply();
+
+        if (removedThisStroke > 0.001f) cleaningManager.TrySpawnDirtParticles(screenPosition);
     }
 
     bool TryGetTexturePixel(Vector2 screenPosition, out Vector2Int pixel)
@@ -159,7 +167,7 @@ public class Quest6DirtEraser : MonoBehaviour
         return true;
     }
 
-    void EraseCircle(int centerX, int centerY, HashSet<int> touchedPixels, float movementStrength)
+    void EraseCircle(int centerX, int centerY, HashSet<int> touchedPixels, float movementStrength, ref float removedThisStroke)
     {
         int radiusSquared = spongeRadius * spongeRadius;
 
@@ -182,7 +190,9 @@ public class Quest6DirtEraser : MonoBehaviour
                 Color pixel = pixels[index];
                 float oldAlpha = pixel.a;
                 pixel.a = Mathf.Max(0f, pixel.a - spongeStrength * movementStrength);
-                removedDirtyAlpha += oldAlpha - pixel.a;
+                float removed = oldAlpha - pixel.a;
+                removedDirtyAlpha += removed;
+                removedThisStroke += removed;
                 pixels[index] = pixel;
             }
         }

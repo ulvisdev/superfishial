@@ -57,7 +57,8 @@ public class Quest6Barnacle : MonoBehaviour
             return;
         }
 
-        if (removed || Mouse.current == null || cleaningManager == null) return;
+        if (removed || Mouse.current == null || cleaningManager == null || !cleaningManager.CanUseTools())
+            return;
 
         if (Mouse.current.leftButton.wasPressedThisFrame && cleaningManager.IsScraperSelected() && IsScraperOverBarnacle())
             HitBarnacle();
@@ -76,15 +77,27 @@ public class Quest6Barnacle : MonoBehaviour
         currentHits++;
         shakeTimer = shakeDuration;
 
+        SoundEffectManager.Play("StatueScrape", true);
+
         if (currentHits >= hitsRequired)
         {
+            cleaningManager.SpawnBarnacleDebris(GetBarnacleScreenPosition(), 6, 10, true);
+            SoundEffectManager.Play("StatueBarnaclePop", true);
             RemoveBarnacle();
             return;
         }
 
+        cleaningManager.SpawnBarnacleDebris(GetBarnacleScreenPosition(), 2, 3, false);
+
         float progress = (float)currentHits / hitsRequired;
         transform.localScale = originalScale * (1f + hitScaleAmount * progress);
         transform.localRotation = Quaternion.Euler(0f, 0f, Random.Range(-hitRotationAmount, hitRotationAmount));
+    }
+
+    Vector2 GetBarnacleScreenPosition()
+    {
+        Camera uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        return RectTransformUtility.WorldToScreenPoint(uiCamera, GetComponent<RectTransform>().position);
     }
 
     void UpdateShake()

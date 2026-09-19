@@ -8,6 +8,12 @@ public class SoundEffectManager : MonoBehaviour
     private static AudioSource audioSource;
     private static AudioSource randomPitchAudioSource;
     private static AudioSource voiceAudioSource;
+    [SerializeField] private AudioSource loopSource;
+
+    private static AudioSource loopAudioSource;
+    private static float currentSFXVolume = 1f;
+    private static float loopVolumeMultiplier = 1f;
+
     private static SoundEffectLibrary soundEffectLibrary;
     [SerializeField] private Slider sfxSlider;
 
@@ -21,6 +27,8 @@ public class SoundEffectManager : MonoBehaviour
             randomPitchAudioSource = audioSources[1];
             voiceAudioSource = audioSources[2];
             soundEffectLibrary = GetComponent<SoundEffectLibrary>();
+
+            loopAudioSource = loopSource;
             // DontDestroyOnLoad(gameObject);
         }
         // else
@@ -58,7 +66,7 @@ public class SoundEffectManager : MonoBehaviour
             voiceAudioSource.pitch = pitch;
             voiceAudioSource.PlayOneShot(audioClip);
         }
-        
+
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -69,13 +77,53 @@ public class SoundEffectManager : MonoBehaviour
 
     public static void SetVolume(float volume)
     {
+        currentSFXVolume = volume;
         audioSource.volume = volume;
         randomPitchAudioSource.volume = volume;
         voiceAudioSource.volume = volume;
+        if (loopAudioSource != null) 
+            loopAudioSource.volume = volume * loopVolumeMultiplier;
     }
 
     public void OnValueChanged()
     {
         SetVolume(sfxSlider.value);
+    }
+
+    public static void StartLoop(string soundName, float volumeMultiplier = 1f, float pitch = 1f)
+    {
+        if (loopAudioSource == null) return;
+
+        AudioClip audioClip = soundEffectLibrary.GetRandomClip(soundName);
+        if (audioClip == null) return;
+
+        loopVolumeMultiplier = volumeMultiplier;
+        loopAudioSource.clip = audioClip;
+        loopAudioSource.loop = true;
+        loopAudioSource.pitch = pitch;
+        loopAudioSource.volume = currentSFXVolume * loopVolumeMultiplier;
+        loopAudioSource.Play();
+    }
+
+    public static void UpdateLoop(float volumeMultiplier, float pitch = 1f)
+    {
+        if (loopAudioSource == null || !loopAudioSource.isPlaying) return;
+
+        loopVolumeMultiplier = volumeMultiplier;
+        loopAudioSource.volume = currentSFXVolume * loopVolumeMultiplier;
+        loopAudioSource.pitch = pitch;
+    }
+
+    public static void StopLoop()
+    {
+        if (loopAudioSource == null) return;
+
+        loopAudioSource.Stop();
+        loopAudioSource.clip = null;
+    }
+
+    public static bool IsLoopPlaying()
+    {
+        return loopAudioSource != null && loopAudioSource.isPlaying;
     }
 }
