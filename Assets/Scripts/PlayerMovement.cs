@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(CapsuleCollider))]
+// [RequireComponent(typeof(CapsuleCollider))]
 public class PlayerMovement : MonoBehaviour
 {
     private enum MovementState
@@ -35,9 +35,9 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float takeoffSpeed = 2.5f;
 
     [Header("Swimming Rotation")]
-    [SerializeField] private float rotationOffset = -90f;
+    // [SerializeField] private float rotationOffset = -90f;
     [SerializeField] private float swimRotationSpeed = 300f;
-    [SerializeField] private float swimIdleRotation = 0f;
+    // [SerializeField] private float swimIdleRotation = 0f;
     [SerializeField] private float swimIdleRotationSpeed = 200f;
     [SerializeField] private float swimIdleSpeedThreshold = 0.15f;
 
@@ -48,7 +48,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float groundGraceTime = 0.08f;
 
     private Rigidbody rb;
-    private CapsuleCollider capsule;
+
+    [Header("Body Collider")]
+    [SerializeField] private CapsuleCollider capsule;
+    [SerializeField] private float colliderRotationSpeed = 300f;
+
+    private int facingDirection;
+    private bool facingLeft;
+
+    private float swimHeading;
+    private bool swimHeadingActive;
 
     private MovementState currentState;
 
@@ -62,13 +71,19 @@ public class PlayerMovement : MonoBehaviour
     private bool movementEnabled = true;
     private bool preserveAnimationAfterUnfreeze = false;
     private float previousAnimatorSpeed = 1f;
+    private bool snapColliderOnReversal;
 
-    private Vector2 lastSwimDirection = Vector2.up;
+    //private Vector2 lastSwimDirection = Vector2.up;
+
+    [Header("Standing Clearance")]
+    [SerializeField] private LayerMask standingObstacleLayers = ~0;
+    [SerializeField] private float standingClearanceTolerance = 0.01f;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-        capsule = GetComponent<CapsuleCollider>();
+        if (capsule == null)
+            capsule = GetComponentInChildren<CapsuleCollider>();
 
         rb.useGravity = false;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
@@ -77,7 +92,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Start()
     {
-        isGrounded = CheckGrounded();
+        isGrounded = CheckGrounded() && CanStandUpright();
 
         if (isGrounded)
         {
@@ -98,6 +113,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         ReadInput();
+        UpdateFacingDirection();
         UpdateSwimmingRotation();
         UpdateSpriteFlip();
         UpdateAnimator();
@@ -118,6 +134,8 @@ public class PlayerMovement : MonoBehaviour
             GroundMovement();
         else
             SwimMovement();
+
+        UpdateBodyColliderRotation();
     }
 
     private void ReadInput()
@@ -152,6 +170,111 @@ public class PlayerMovement : MonoBehaviour
             verticalInput -= 1f;
         }
 
+    }
+
+    private bool CanStandUpright()
+    {
+        if (capsule == null) return false;
+
+        Transform body = capsule.transform;
+        Vector3 scale = body.lossyScale;
+
+        float radius = capsule.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
+        float height = Mathf.Max(capsule.height * Mathf.Abs(scale.y), radius * 2f);
+        float halfSegment = height * 0.5f - radius;
+
+        Quaternion uprightRotation = body.parent != null ? body.parent.rotation : Quaternion.identity;
+        Vector3 uprightAxis = uprightRotation * Vector3.up;
+        Vector3 uprightCentre = body.position + uprightRotation * Vector3.Scale(capsule.center, scale);
+
+        float uprightBottom = uprightCentre.y - radius - halfSegment * Mathf.Abs(uprightAxis.y);
+        float lift = Mathf.Max(0f, GetCapsuleBottomY() - uprightBottom);
+
+        uprightCentre += Vector3.up * lift;
+
+        Vector3 bottomPoint = uprightCentre - uprightAxis * halfSegment;
+        Vector3 topPoint = uprightCentre + uprightAxis * halfSegment;
+        float checkRadius = Mathf.Max(0.001f, radius - Mathf.Clamp(standingClearanceTolerance, 0f, radius * 0.1f));
+
+        Collider[] obstacles = Physics.OverlapCapsule(bottomPoint, topPoint, checkRadius, standingObstacleLayers, QueryTriggerInteraction.Ignore);
+
+        foreach (Collider obstacle in obstacles)
+        {
+            if (obstacle.attachedRigidbody == rb) continue;
+            if (obstacle.transform.IsChildOf(transform)) continue;
+            if (Physics.GetIgnoreLayerCollision(capsule.gameObject.layer, obstacle.gameObject.layer)) continue;
+            if (Physics.GetIgnoreCollision(capsule, obstacle)) continue;
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private Vector3 GetFacingDirection()
+    {
+        float vertical = currentState == MovementState.Swimming ? verticalInput : 0f;
+        Vector3 direction = new Vector3(horizontalInput, vertical, depthInput);
+
+        if (direction.sqrMagnitude > 0.01f) return direction;
+
+        direction = rb.linearVelocity;
+        if (currentState == MovementState.Grounded) direction.y = 0f;
+
+        return direction.magnitude > swimIdleSpeedThreshold ? direction : Vector3.zero;
+    }
+
+    private void UpdateFacingDirection()
+    {
+        Vector3 direction = GetFacingDirection();
+        if (direction.sqrMagnitude < 0.001f) return;
+
+        float sideStrength = new Vector2(direction.x, direction.y).magnitude;
+        float depthStrength = Mathf.Abs(direction.z);
+
+        bool useDepth = facingDirection == 0 ? depthStrength > sideStrength * 1.15f : depthStrength > sideStrength * 0.85f;
+
+        if (useDepth)
+        {
+            facingDirection = direction.z < 0f ? 1 : 2;
+            return;
+        }
+
+        facingDirection = 0;
+
+        if (currentState == MovementState.Grounded)
+        {
+            if (direction.x < -0.01f) facingLeft = true;
+            if (direction.x > 0.01f) facingLeft = false;
+        }
+    }
+
+    private void UpdateBodyColliderRotation()
+    {
+        if (capsule == null) return;
+
+        if (currentState == MovementState.Grounded)
+        {
+            capsule.transform.localRotation = Quaternion.identity;
+            snapColliderOnReversal = false;
+            return;
+        }
+
+        if (facingDirection == 0 && visual != null)
+        {
+            capsule.transform.localRotation = visual.localRotation * Quaternion.Euler(0f, 0f, 90f);
+            snapColliderOnReversal = false;
+            return;
+        }
+
+        Vector3 direction = GetFacingDirection();
+        if (direction.sqrMagnitude < 0.001f) return;
+
+        Vector3 localDirection = transform.InverseTransformDirection(direction.normalized);
+        Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, localDirection);
+
+        capsule.transform.localRotation = Quaternion.RotateTowards(capsule.transform.localRotation, targetRotation, colliderRotationSpeed * Time.fixedDeltaTime);
+        snapColliderOnReversal = false;
     }
 
     private void GroundMovement()
@@ -210,9 +333,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void EnterGroundedState()
     {
-        if (currentState == MovementState.Grounded)
-            return;
+        if (currentState == MovementState.Grounded) return;
+        if (!CanStandUpright()) return;
 
+        SnapUprightForLanding();
         currentState = MovementState.Grounded;
 
         Vector3 velocity = rb.linearVelocity;
@@ -254,53 +378,86 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateSwimmingRotation()
     {
-        if (visual == null)
-        {
-            return;
-        }
-
-        float targetRotation;
-        float rotationSpeed;
+        if (visual == null) return;
 
         if (currentState == MovementState.Grounded)
         {
-            targetRotation = 0f;
-            rotationSpeed = swimIdleRotationSpeed;
+            swimHeadingActive = false;
+            float groundedRotation = Mathf.MoveTowardsAngle(visual.localEulerAngles.z, 0f, swimIdleRotationSpeed * Time.deltaTime);
+            visual.localRotation = Quaternion.Euler(0f, 0f, groundedRotation);
+            return;
         }
-        else
+
+        if (facingDirection != 0)
         {
-            Vector2 visibleInput = new Vector2(horizontalInput, verticalInput);
-            Vector2 visibleVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y);
-
-            bool hasInput = visibleInput.sqrMagnitude > 0.01f;
-            bool isStillMoving = visibleVelocity.magnitude > swimIdleSpeedThreshold;
-
-            if (hasInput || isStillMoving)
-            {
-                Vector2 direction;
-
-                if (hasInput)
-                    direction = visibleInput;
-                else
-                    direction = visibleVelocity;
-
-                if (direction.sqrMagnitude > 0.01f)
-                    lastSwimDirection = direction.normalized;
-
-                targetRotation = Mathf.Atan2(lastSwimDirection.y, lastSwimDirection.x) * Mathf.Rad2Deg + rotationOffset;
-                rotationSpeed = swimRotationSpeed;
-            }
-            else
-            {
-                targetRotation = swimIdleRotation;
-                rotationSpeed = swimIdleRotationSpeed;
-            }
+            swimHeadingActive = false;
+            float depthRotation = Mathf.MoveTowardsAngle(visual.localEulerAngles.z, 0f, swimRotationSpeed * Time.deltaTime);
+            visual.localRotation = Quaternion.Euler(0f, 0f, depthRotation);
+            return;
         }
 
-        float currentRotation = visual.localEulerAngles.z;
-        float newRotation = Mathf.MoveTowardsAngle(currentRotation, targetRotation, rotationSpeed * Time.deltaTime);
+        Vector3 direction = GetFacingDirection();
+        Vector2 visibleDirection = new Vector2(direction.x, direction.y);
 
-        visual.localRotation = Quaternion.Euler(0f, 0f, newRotation);
+        if (visibleDirection.sqrMagnitude < 0.001f) return;
+
+        float targetHeading = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+
+        if (!swimHeadingActive)
+        {
+            swimHeading = targetHeading;
+            swimHeadingActive = true;
+        }
+
+        bool horizontalOnly = Mathf.Abs(horizontalInput) > 0.01f && Mathf.Abs(verticalInput) < 0.01f && Mathf.Abs(depthInput) < 0.01f;
+        bool oppositeHeading = Mathf.Abs(Mathf.DeltaAngle(swimHeading, targetHeading)) > 175f;
+        if (horizontalOnly && oppositeHeading)
+        {
+            swimHeading = targetHeading;
+            snapColliderOnReversal = true;
+        }
+
+        swimHeading = Mathf.MoveTowardsAngle(swimHeading, targetHeading, swimRotationSpeed * Time.deltaTime);
+
+        float horizontalHeading = Mathf.Cos(swimHeading * Mathf.Deg2Rad);
+
+        if (horizontalHeading < -0.001f) facingLeft = true;
+        if (horizontalHeading > 0.001f) facingLeft = false;
+
+        float spriteRotation = swimHeading - (facingLeft ? 180f : 0f);
+        visual.localRotation = Quaternion.Euler(0f, 0f, spriteRotation);
+    }
+
+    private float GetCapsuleBottomY()
+    {
+        Transform body = capsule.transform;
+        Vector3 scale = body.lossyScale;
+
+        float radius = capsule.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
+        float height = Mathf.Max(capsule.height * Mathf.Abs(scale.y), radius * 2f);
+        float halfSegment = height * 0.5f - radius;
+
+        Vector3 centre = body.TransformPoint(capsule.center);
+        float verticalExtent = radius + halfSegment * Mathf.Abs(body.up.y);
+
+        return centre.y - verticalExtent;
+    }
+
+    private void SnapUprightForLanding()
+    {
+        if (capsule != null)
+        {
+            float previousBottom = GetCapsuleBottomY();
+
+            capsule.transform.localRotation = Quaternion.identity;
+
+            float uprightBottom = GetCapsuleBottomY();
+            float lift = Mathf.Max(0f, previousBottom - uprightBottom);
+
+            if (lift > 0f) rb.position += Vector3.up * lift;
+        }
+
+        // if (visual != null) visual.localRotation = Quaternion.identity;
     }
 
     private void UpdateAnimator()
@@ -332,6 +489,11 @@ public class PlayerMovement : MonoBehaviour
         animator.SetFloat("GroundSpeed", groundSpeed);
         animator.SetFloat("SwimSpeed", swimSpeed);
         animator.SetBool("IsSwimming", currentState == MovementState.Swimming);
+
+        float animationSpeed = currentState == MovementState.Swimming ? swimSpeed : groundSpeed;
+
+        animator.SetInteger("Facing", facingDirection);
+        animator.SetBool("Moving", animationSpeed > swimIdleSpeedThreshold);
     }
 
     public void SetMovementEnabled(bool enabled)
@@ -373,14 +535,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateSpriteFlip()
     {
-        if (spriteRenderer == null)
-            return;
-
-        if (horizontalInput < -0.01f)
-            spriteRenderer.flipX = true;
-
-        if (horizontalInput > 0.01f)
-            spriteRenderer.flipX = false;
+        if (spriteRenderer == null) return;
+        spriteRenderer.flipX = facingDirection == 0 && !facingLeft;
     }
 
     private void OnEnable()
@@ -399,7 +555,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        CapsuleCollider currentCapsule = GetComponent<CapsuleCollider>();
+        CapsuleCollider currentCapsule = capsule != null ? capsule : GetComponentInChildren<CapsuleCollider>();
 
         if (currentCapsule == null)
         {

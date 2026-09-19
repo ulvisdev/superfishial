@@ -76,7 +76,7 @@ SpriteRenderer:
   m_SortingLayerID: -405252727
   m_SortingLayer: 1
   m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: b73df9983c57da04d8f84679dea63ba8, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 810abcdf2dd28f6449e4fb06563f302d, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -5078,7 +5078,7 @@ GameObject:
   - component: {fileID: 9005474385224805930}
   - component: {fileID: 167196316990697182}
   m_Layer: 0
-  m_Name: Skateboard
+  m_Name: Sponge
   m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5134,7 +5134,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: b73df9983c57da04d8f84679dea63ba8, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 810abcdf2dd28f6449e4fb06563f302d, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -5168,11 +5168,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f7484f6d2ae52443b9aeef1b0476dec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ID: 4
-  itemName: Hammerhead's Skateboard
-  itemDescription: A dirty skateboard, a bit worn out.
+  ID: 5
+  itemName: Sponge
+  itemDescription: An old, used sponge
   quantity: 1
-  IsQuestItem: 1
+  IsQuestItem: 0
   spriteRenderer: {fileID: 7511579769233006272}
   visuals: {fileID: 5838648142333426599}
 --- !u!114 &4970973540269893173
