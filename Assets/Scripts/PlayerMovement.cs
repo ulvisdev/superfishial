@@ -69,6 +69,7 @@ public class PlayerMovement : MonoBehaviour
     private float timeSinceGrounded;
 
     private bool movementEnabled = true;
+    public bool IsMovementEnabled => movementEnabled;
     private bool preserveAnimationAfterUnfreeze = false;
     private float previousAnimatorSpeed = 1f;
     private bool snapColliderOnReversal;
