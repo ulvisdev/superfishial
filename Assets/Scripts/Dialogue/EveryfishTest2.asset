@@ -34,7 +34,7 @@ MonoBehaviour:
   - {fileID: -149640682, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
   - {fileID: 2007100102, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
   dialogueLine:
-  - You aren't supposed to be here.
+  - '[shake]You[/shake] [danger]aren''t[/danger] supposed to be [wave]here[/wave].'
   - But you knew that already, didn't you?
   - Excellent.
   - How about doing me a favor then?
@@ -89,7 +89,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
   - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
   repeatingVoice: 000100000000000000
-  pitchType: 000000000100000000000000000000000000000000000000000000000100000000000000
+  RandomPitch: 000000000000000000
   voicePitch:
   - 1
   - 1

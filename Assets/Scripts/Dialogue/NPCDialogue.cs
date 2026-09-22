@@ -23,7 +23,7 @@ public class NewNPCDialogue : ScriptableObject
     [Header("Dialogue Audio")]
     public AudioClip[] voiceSound;
     public bool[] repeatingVoice;
-    public PitchType[] pitchType;
+    public bool[] RandomPitch;
     public float[] voicePitch;
 
     [Header("Dialogue Quest")]
@@ -32,8 +32,6 @@ public class NewNPCDialogue : ScriptableObject
     public Quest quest; // Quest NPC gives
 
 }
-
-public enum PitchType { Static, Random }
 
 [System.Serializable]
 public class DialogueChoice

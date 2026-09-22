@@ -45,15 +45,15 @@ public class NPC : MonoBehaviour, iInteractable
         SyncQuestState();
 
         //Set dialogue line based on questState
-        if(questState == QuestState.NotStarted)
+        if (questState == QuestState.NotStarted)
         {
             dialogueIndex = 0;
         }
-        else if(questState == QuestState.InProgress)
+        else if (questState == QuestState.InProgress)
         {
             dialogueIndex = dialogueData.questInProgressIndex;
         }
-        else if(questState == QuestState.Completed)
+        else if (questState == QuestState.Completed)
         {
             dialogueIndex = dialogueData.questCompletedIndex;
         }
@@ -75,10 +75,10 @@ public class NPC : MonoBehaviour, iInteractable
 
         string questID = dialogueData.quest.questID;
 
-        if(QuestController.Instance.IsQuestCompleted(questID) || QuestController.Instance.IsQuestHandedIn(questID))
+        if (QuestController.Instance.IsQuestCompleted(questID) || QuestController.Instance.IsQuestHandedIn(questID))
         {
             questState = QuestState.Completed;
-        } 
+        }
         else if (QuestController.Instance.IsQuestActive(questID))
         {
             questState = QuestState.InProgress;
@@ -91,13 +91,23 @@ public class NPC : MonoBehaviour, iInteractable
 
     void NextLine()
     {
+        // if (isTyping)
+        // {
+        //     // Skip typing animation and show the full line
+        //     StopAllCoroutines();
+        //     DialogueController.Instance.dialogueVertexAnimator.SkipToEndOfCurrentMessage();
+        //     isTyping = false;
+        // }
+
+        // --- NEW --- //
         if (isTyping)
         {
-            // Skip typing animation and show the full line
             StopAllCoroutines();
-            dialogueUI.SetDialogueText(dialogueData.dialogueLine[dialogueIndex]);
+            dialogueUI.ShowAllDialogueText();
             isTyping = false;
+            return;
         }
+        // --- --- --- //
 
         //Clear Choices
         dialogueUI.ClearChoices();
@@ -130,50 +140,84 @@ public class NPC : MonoBehaviour, iInteractable
         }
     }
 
+    // IEnumerator TypeLine()
+    // {
+    //     isTyping = true;
+    //     dialogueUI.SetDialogueText("");
+
+    //     dialogueUI.SetNPCInfo(dialogueData.npcName[dialogueIndex], dialogueData.npcPortrait[dialogueIndex]);
+
+    //     if (!dialogueData.repeatingVoice[dialogueIndex])
+    //     {
+    //         SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], dialogueData.RandomPitch[dialogueIndex]);
+    //         DialogueController.Instance.PlayDialogue(dialogueData.dialogueLine[dialogueIndex], null);
+    //     }
+    //     else
+    //     {
+    //         DialogueController.Instance.PlayDialogue(dialogueData.dialogueLine[dialogueIndex], dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], dialogueData.RandomPitch[dialogueIndex]);
+    //     }
+
+    //     foreach (char letter in dialogueData.dialogueLine[dialogueIndex])
+    //     {
+    //         dialogueUI.SetDialogueText(dialogueUI.dialogueText.text += letter);
+    //         if (dialogueData.repeatingVoice[dialogueIndex])
+    //         {
+    //             if (dialogueData.RandomPitch[dialogueIndex])
+    //             {
+    //                 SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], true);
+    //             }
+    //             else
+    //             {
+    //                 SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex]);
+    //             }
+    //         }
+    //         yield return new WaitForSeconds(dialogueData.typingSpeed[dialogueIndex]);
+    //     }
+
+    //     isTyping = false;
+
+    //     if (dialogueData.autoProgressLine[dialogueIndex])
+    //     {
+    //         yield return new WaitForSeconds(dialogueData.autoProgressDelay[dialogueIndex]);
+    //         NextLine();
+    //     }
+    // }
+
+    // --- NEW --- //
     IEnumerator TypeLine()
     {
         isTyping = true;
-        dialogueUI.SetDialogueText("");
 
         dialogueUI.SetNPCInfo(dialogueData.npcName[dialogueIndex], dialogueData.npcPortrait[dialogueIndex]);
+        string currentLine = dialogueData.dialogueLine[dialogueIndex];
+
+        dialogueUI.PrepareDialogueText(currentLine);
+
+        int characterCount = dialogueUI.GetDialogueCharacterCount();
 
         if (!dialogueData.repeatingVoice[dialogueIndex])
-        {
-            if (dialogueData.pitchType[dialogueIndex] == PitchType.Random)
-            {
-                SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], true);
-            }
-            else
-            {
-                SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex]);
-            }
-        }
+            SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], dialogueData.RandomPitch[dialogueIndex]);
 
-        foreach (char letter in dialogueData.dialogueLine[dialogueIndex])
+        for (int i = 0; i < characterCount; i++)
         {
-            dialogueUI.SetDialogueText(dialogueUI.dialogueText.text += letter);
-            if (dialogueData.repeatingVoice[dialogueIndex])
-            {
-                if (dialogueData.pitchType[dialogueIndex] == PitchType.Random)
-                {
-                    SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], true);
-                }
-                else
-                {
-                    SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex]);
-                }
-            }
-            yield return new WaitForSeconds(dialogueData.typingSpeed[dialogueIndex]);
+            dialogueUI.RevealDialogueCharacter(i);
+            char character = dialogueUI.GetDialogueCharacter(i);
+
+            if (dialogueData.repeatingVoice[dialogueIndex] && !char.IsWhiteSpace(character))
+                SoundEffectManager.PlayVoice(dialogueData.voiceSound[dialogueIndex], dialogueData.voicePitch[dialogueIndex], dialogueData.RandomPitch[dialogueIndex]);
+
+            yield return new WaitForSecondsRealtime(dialogueData.typingSpeed[dialogueIndex]);
         }
 
         isTyping = false;
 
         if (dialogueData.autoProgressLine[dialogueIndex])
         {
-            yield return new WaitForSeconds(dialogueData.autoProgressDelay[dialogueIndex]);
+            yield return new WaitForSecondsRealtime(dialogueData.autoProgressDelay[dialogueIndex]);
             NextLine();
         }
     }
+    // --- --- --- //
 
     void DisplayChoices(DialogueChoice choice)
     {
@@ -205,14 +249,20 @@ public class NPC : MonoBehaviour, iInteractable
 
     public void EndDialogue()
     {
-        if(questState == QuestState.Completed && !QuestController.Instance.IsQuestHandedIn(dialogueData.quest.questID))
+        if (questState == QuestState.Completed && !QuestController.Instance.IsQuestHandedIn(dialogueData.quest.questID))
         {
             HandleQuestCompletion(dialogueData.quest);
         }
 
         StopAllCoroutines();
         isDialogueActive = false;
-        dialogueUI.SetDialogueText("");
+
+        // dialogueUI.SetDialogueText("");
+
+        // --- NEW --- //
+        dialogueUI.ClearDialogueText();
+        // --- --- --- //
+        
         dialogueUI.ShowDialogueUI(false);
         PauseController.SetPause(false);
 
