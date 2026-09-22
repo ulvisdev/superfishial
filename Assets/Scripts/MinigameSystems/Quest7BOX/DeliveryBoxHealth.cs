@@ -24,6 +24,14 @@ public class DeliveryBoxHealth : MonoBehaviour
     [SerializeField, Min(0f)] private float trailDelay = 0.3f;
     [SerializeField, Min(0f)] private float barShakePixels = 5f;
 
+    [Header("Health Bar Colours")]
+    [SerializeField] private Color healthyColor = new Color(0.2f, 0.9f, 0.25f);
+    [SerializeField] private Color warningColor = new Color(1f, 0.5f, 0f);
+    [SerializeField] private Color criticalColor = new Color(0.95f, 0.1f, 0.1f);
+    [SerializeField, Range(0.05f, 0.45f)] private float criticalHealthThreshold = 0.25f;
+    [SerializeField, Min(0.1f)] private float criticalFlashSpeed = 2f;
+    [SerializeField, Range(0f, 1f)] private float criticalFlashStrength = 1f;
+
     [Header("Health")]
     [SerializeField, Min(1f)] private float maximumHealth = 100f;
     [SerializeField] private float currentHealth;
@@ -63,6 +71,7 @@ public class DeliveryBoxHealth : MonoBehaviour
     public float CurrentHealth => currentHealth;
     public float HealthFraction => currentHealth / Mathf.Max(1f, maximumHealth);
     public bool IsBroken { get; private set; }
+    public bool IsDelivered { get; private set; }
 
     private DeliveryBox deliveryBox;
     private Rigidbody body;
@@ -78,6 +87,8 @@ public class DeliveryBoxHealth : MonoBehaviour
     private Sprite chunkSprite;
     private Canvas barCanvas;
     private CanvasGroup barGroup;
+    private Image healthFill;
+    private float criticalFlashTime;
     private float cooldown, flash, shake, trailWait, deathTime;
     private float displayedHealth = 1f, delayedHealth = 1f;
     private bool hasBeenHit;
@@ -111,12 +122,15 @@ public class DeliveryBoxHealth : MonoBehaviour
             shakePosition = shakeRoot.localPosition;
             shakeRotation = shakeRoot.localRotation;
         }
+
         sprites = shakeRoot != null ? shakeRoot.GetComponentsInChildren<SpriteRenderer>(true) : GetComponentsInChildren<SpriteRenderer>(true);
         originalMaterials = new Material[sprites.Length];
         originalColors = new Color[sprites.Length];
 
         if (flashShader != null && flashShader.isSupported)
             flashMaterial = new Material(flashShader);
+        else
+            Debug.LogWarning("Assign DeliveryBoxFlash.shader to Flash Shader for a true white flash.", this);
 
         for (int i = 0; i < sprites.Length; i++)
         {
@@ -126,6 +140,7 @@ public class DeliveryBoxHealth : MonoBehaviour
             if (flashMaterial != null && sprites[i] == boxSprite)
                 sprites[i].sharedMaterial = flashMaterial;
         }
+
         colliders = GetComponentsInChildren<Collider>(true);
         colliderStates = new bool[colliders.Length];
 
@@ -148,8 +163,11 @@ public class DeliveryBoxHealth : MonoBehaviour
         SetupSlider(healthBar);
         SetupSlider(delayedHealthBar);
 
-        if (healthBar != null && healthBar.fillRect != null && healthBar.fillRect.TryGetComponent(out Image greenFill))
-            greenFill.color = Color.green;
+        if (healthBar != null && healthBar.fillRect != null)
+            healthFill = healthBar.fillRect.GetComponent<Image>();
+
+        UpdateHealthColor(0f);
+
         if (delayedHealthBar != null && delayedHealthBar.fillRect != null && delayedHealthBar.fillRect.TryGetComponent(out Image whiteFill))
             whiteFill.color = Color.white;
 
@@ -171,7 +189,7 @@ public class DeliveryBoxHealth : MonoBehaviour
 
     private void Update()
     {
-        if (IsPaused)
+        if (IsPaused || IsDelivered)
             return;
 
         float dt = Time.deltaTime;
@@ -180,7 +198,7 @@ public class DeliveryBoxHealth : MonoBehaviour
         shake = Mathf.Max(0f, shake - dt);
         trailWait = Mathf.Max(0f, trailWait - dt);
         displayedHealth = Mathf.Lerp(displayedHealth, HealthFraction, 1f - Mathf.Exp(-fillSmoothness * dt));
-
+        
         if (trailWait <= 0f)
             delayedHealth = Mathf.Lerp(delayedHealth, HealthFraction, 1f - Mathf.Exp(-trailSmoothness * dt));
 
@@ -190,15 +208,42 @@ public class DeliveryBoxHealth : MonoBehaviour
             healthBar.SetValueWithoutNotify(displayedHealth);
         if (delayedHealthBar != null)
             delayedHealthBar.SetValueWithoutNotify(delayedHealth);
-
         if (IsBroken)
             deathTime += dt;
 
+        UpdateHealthColor(dt);
         UpdateFeedback();
         UpdateChunks(dt);
 
         if (IsBroken && deathTime >= Mathf.Max(respawnDelay, deathFadeDuration))
             ResetBox();
+
+    }
+
+    private void UpdateHealthColor(float dt)
+    {
+        if (healthFill == null)
+            return;
+
+        float fraction = Mathf.Clamp01(displayedHealth);
+        float threshold = Mathf.Clamp(criticalHealthThreshold, 0.05f, 0.45f);
+        Color color;
+
+        if (fraction > 0.5f)
+            color = Color.Lerp(warningColor, healthyColor, Mathf.InverseLerp(0.5f, 1f, fraction));
+        else
+            color = Color.Lerp(criticalColor, warningColor, Mathf.InverseLerp(threshold, 0.5f, fraction));
+
+        if (HealthFraction <= threshold && hasBeenHit && !IsBroken && !IsDelivered)
+        {
+            criticalFlashTime += dt;
+            float pulse = (1f - Mathf.Cos(criticalFlashTime * criticalFlashSpeed * Mathf.PI * 2f)) * 0.5f;
+            color = Color.Lerp(criticalColor, Color.white, pulse * criticalFlashStrength);
+        }
+        else
+            criticalFlashTime = 0f;
+
+        healthFill.color = color;
     }
 
     private void LateUpdate()
@@ -207,7 +252,7 @@ public class DeliveryBoxHealth : MonoBehaviour
             return;
 
         Vector3 screen = worldCamera.WorldToScreenPoint(transform.position + barWorldOffset);
-        barGroup.alpha = hasBeenHit && !IsBroken && screen.z > 0f ? 1f : 0f;
+        barGroup.alpha = hasBeenHit && !IsBroken && !IsDelivered && screen.z > 0f ? 1f : 0f;
 
         if (barGroup.alpha == 0f)
             return;
@@ -216,7 +261,7 @@ public class DeliveryBoxHealth : MonoBehaviour
         screen.y += barShake.y;
         Camera uiCamera = barCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : barCanvas.worldCamera;
         RectTransform parent = healthBarRoot.parent as RectTransform;
-
+        
         if (parent != null && RectTransformUtility.ScreenPointToWorldPointInRectangle(parent, screen, uiCamera, out Vector3 position))
             healthBarRoot.position = position;
     }
@@ -251,7 +296,7 @@ public class DeliveryBoxHealth : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (!isActiveAndEnabled || IsBroken || IsPaused || cooldown > 0f)
+        if (!isActiveAndEnabled || IsBroken || IsDelivered || IsPaused || cooldown > 0f)
             return;
         if (onlyDamageWhenCollected && !deliveryBox.IsCollected)
             return;
@@ -262,7 +307,7 @@ public class DeliveryBoxHealth : MonoBehaviour
 
         for (int i = 0; i < collision.contactCount; i++)
             speed = Mathf.Max(speed, Mathf.Abs(Vector3.Dot(collision.relativeVelocity, collision.GetContact(i).normal)));
-
+        
         float excess = Mathf.Max(0f, speed - minimumImpactSpeed);
         float damage = Mathf.Min(maximumDamagePerHit, excess * excess * damageMultiplier);
 
@@ -271,6 +316,7 @@ public class DeliveryBoxHealth : MonoBehaviour
 
         if (damage <= 0f)
             return;
+
         ApplyDamage(damage);
     }
 
@@ -293,6 +339,7 @@ public class DeliveryBoxHealth : MonoBehaviour
 
         if (IsBroken)
             onBroken.Invoke();
+
     }
 
     private void BreakBox()
@@ -310,8 +357,10 @@ public class DeliveryBoxHealth : MonoBehaviour
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
         }
+
         body.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
         body.isKinematic = true;
+        
         for (int i = 0; i < colliders.Length; i++)
         {
             if (colliders[i] == null)
@@ -320,6 +369,7 @@ public class DeliveryBoxHealth : MonoBehaviour
             colliderStates[i] = colliders[i].enabled;
             colliders[i].enabled = false;
         }
+
         SpawnChunks();
     }
 
@@ -338,7 +388,9 @@ public class DeliveryBoxHealth : MonoBehaviour
             chunkMaterial = new Material(flashMaterial);
             chunkMaterial.SetFloat("_Flash", 0f);
         }
+
         Quaternion plane = worldCamera != null ? worldCamera.transform.rotation : Quaternion.identity;
+
         for (int i = 0; i < chunkCount; i++)
         {
             GameObject piece = new GameObject("Box Chunk");
@@ -363,6 +415,7 @@ public class DeliveryBoxHealth : MonoBehaviour
         {
             Chunk chunk = chunks[i];
             chunk.age += dt;
+
             if (chunk.sprite == null || chunk.age >= chunkLifetime)
             {
                 if (chunk.sprite != null)
@@ -382,10 +435,31 @@ public class DeliveryBoxHealth : MonoBehaviour
         }
     }
 
+    public bool CompleteDelivery()
+    {
+        if (IsBroken || IsDelivered || !deliveryBox.IsCollected)
+            return false;
+
+        IsDelivered = true;
+        hasBeenHit = false;
+        flash = 0f;
+        shake = 0f;
+        trailWait = 0f;
+        deliveryBox.enabled = false;
+
+        ClearChunks();
+        RestoreVisuals();
+
+        if (barGroup != null)
+            barGroup.alpha = 0f;
+
+        return true;
+    }
+
     [ContextMenu("Reset Box")]
     public void ResetBox()
     {
-        if (!Application.isPlaying || body == null)
+        if (!Application.isPlaying || body == null || IsDelivered)
             return;
 
         bool wasBroken = IsBroken;
@@ -395,32 +469,46 @@ public class DeliveryBoxHealth : MonoBehaviour
         body.angularVelocity = Vector3.zero;
         body.position = spawnPosition;
         body.rotation = spawnRotation;
+
         transform.SetPositionAndRotation(spawnPosition, spawnRotation);
         body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         deliveryBox.Release();
 
         if (wasBroken)
+        {
             for (int i = 0; i < colliders.Length; i++)
-                if (colliders[i] != null) colliders[i].enabled = colliderStates[i];
+            {
+                if (colliders[i] != null)
+                    colliders[i].enabled = colliderStates[i];
+            }
+        }
 
         IsBroken = false;
         hasBeenHit = false;
         currentHealth = Mathf.Max(1f, maximumHealth);
-        displayedHealth = delayedHealth = 1f;
+        displayedHealth = 1f;
+        delayedHealth = 1f;
+        criticalFlashTime = 0f;
         cooldown = Mathf.Max(0.3f, damageCooldown);
-        flash = shake = trailWait = deathTime = 0f;
+        flash = 0f;
+        shake = 0f;
+        trailWait = 0f;
+        deathTime = 0f;
 
         ClearChunks();
         RestoreVisuals();
 
         if (healthBar != null)
             healthBar.SetValueWithoutNotify(1f);
+
         if (delayedHealthBar != null)
             delayedHealthBar.SetValueWithoutNotify(1f);
+            
         if (barGroup != null)
             barGroup.alpha = 0f;
 
         deliveryBox.enabled = true;
+        UpdateHealthColor(0f);
         onHealthChanged.Invoke(HealthFraction);
         onReset.Invoke();
     }
@@ -432,22 +520,28 @@ public class DeliveryBoxHealth : MonoBehaviour
             shakeRoot.localPosition = shakePosition;
             shakeRoot.localRotation = shakeRotation;
         }
+
         if (flashMaterial != null)
             flashMaterial.SetFloat("_Flash", 0f);
 
         if (sprites != null)
+        {
             for (int i = 0; i < sprites.Length; i++)
-                if (sprites[i] != null) sprites[i].color = originalColors[i];
-
+            {
+                if (sprites[i] != null)
+                    sprites[i].color = originalColors[i];
+            }
+        }
         barShake = Vector2.zero;
     }
 
     private void ClearChunks()
     {
         foreach (Chunk chunk in chunks)
+        {
             if (chunk.sprite != null)
                 Destroy(chunk.sprite.gameObject);
-
+        }
         chunks.Clear();
     }
 
@@ -455,7 +549,7 @@ public class DeliveryBoxHealth : MonoBehaviour
     {
         if (barGroup != null)
             barGroup.alpha = 0f;
-
+            
         ClearChunks();
         RestoreVisuals();
     }
@@ -463,10 +557,14 @@ public class DeliveryBoxHealth : MonoBehaviour
     private void OnDestroy()
     {
         ClearChunks();
-
         if (sprites != null)
+        {
             for (int i = 0; i < sprites.Length; i++)
-                if (sprites[i] != null) sprites[i].sharedMaterial = originalMaterials[i];
+            {
+                if (sprites[i] != null)
+                    sprites[i].sharedMaterial = originalMaterials[i];
+            }
+        }
 
         if (flashMaterial != null)
             Destroy(flashMaterial);
