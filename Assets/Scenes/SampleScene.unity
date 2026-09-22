@@ -378,6 +378,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   instructionsPanel: {fileID: 1337041808}
   minigamePanel: {fileID: 1136508809}
+  inventoryFullPanel: {fileID: 0}
   miniPlayer: {fileID: 1469291373}
   currentScroller: {fileID: 16323150}
   obstacleManager: {fileID: 16323149}
@@ -413,15 +414,17 @@ MonoBehaviour:
     weight: 1
   laneCount: 5
   minimumObstaclesPerWave: 2
-  maximumObstaclesPerWave: 4
+  maximumObstaclesPerWave: 3
   safeLaneClearance: 0
   verticalPadding: 50
-  minimumWaveSpacing: 300
-  maximumWaveSpacing: 450
+  minimumWaveSpacing: 280
+  maximumWaveSpacing: 360
   spawnPadding: 60
   startingObstacleSpeed: 300
-  maximumObstacleSpeed: 750
-  acceleration: 25
+  maximumObstacleSpeed: 600
+  acceleration: 20
+  firstWaveDelay: 0.35
+  warmupWaves: 1
   resetDelay: 1
 --- !u!114 &16323150
 MonoBehaviour:
@@ -3591,8 +3594,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 110, y: 40}
+  m_AnchoredPosition: {x: 0, y: -5}
+  m_SizeDelta: {x: 90, y: 15}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &500004838
 MonoBehaviour:
@@ -7454,12 +7457,12 @@ MonoBehaviour:
   hitbox: {fileID: 1537419129}
   miniPlayer: {fileID: 1469291373}
   minigameManager: {fileID: 16323148}
-  appearDelay: 1.5
+  appearDelay: 8
   offscreenPadding: 100
   entranceSpeed: 250
   driftSpeed: 25
   leftStopPadding: 80
-  pushSpeed: 320
+  pushSpeed: 350
   pushAcceleration: 800
   pushDeceleration: 600
   pushHoldDuration: 0.2
@@ -12617,7 +12620,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 166d550f68833b5468dcd5640f46db86, type: 3}
+  m_Sprite: {fileID: 461144853, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -12649,10 +12652,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playArea: {fileID: 2011129851}
   hitbox: {fileID: 500004837}
-  moveSpeed: 600
-  acceleration: 1200
-  deceleration: 1600
-  hitboxSize: {x: 110, y: 40}
+  moveSpeed: 320
+  acceleration: 1600
+  deceleration: 2000
+  backwardSpeedMultiplier: 1.4
+  turnAcceleration: 3000
+  swimImage: {fileID: 1469291371}
+  swimFrames:
+  - {fileID: 461144853, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
+  - {fileID: 1310262763, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
+  - {fileID: -45760289, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
+  - {fileID: -1813861344, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
+  - {fileID: -1891076204, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
+  - {fileID: -78822191, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
+  - {fileID: -540403530, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
+  - {fileID: -694209154, guid: 359d5a8a5191ebb4fb66f0fd532682e6, type: 3}
+  swimFramesPerSecond: 10
+  alwaysFaceRight: 0
+  hitboxSize: {x: 90, y: 15}
 --- !u!95 &1469291374
 Animator:
   serializedVersion: 7
@@ -13244,7 +13261,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 90, y: 90}
+  m_SizeDelta: {x: 75, y: 55}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1537419130
 MonoBehaviour:
@@ -18855,11 +18872,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1981855136}
   m_CullTransparentMesh: 1
---- !u!4 &2004079925 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3648031596747735805, guid: b7675683402313648af76fd27c6e45a3, type: 3}
-  m_PrefabInstance: {fileID: 5028371678842938975}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2011129850
 GameObject:
   m_ObjectHideFlags: 0
@@ -19996,9 +20008,9 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1907272403777846100, guid: b7675683402313648af76fd27c6e45a3, type: 3}
-      propertyPath: shakeRoot
+      propertyPath: fishSprite
       value: 
-      objectReference: {fileID: 1261305849}
+      objectReference: {fileID: 0}
     - target: {fileID: 1907272403777846100, guid: b7675683402313648af76fd27c6e45a3, type: 3}
       propertyPath: deliveryBox
       value: 
@@ -20011,14 +20023,6 @@ PrefabInstance:
       propertyPath: playerMovement
       value: 
       objectReference: {fileID: 1633555440}
-    - target: {fileID: 1907272403777846100, guid: b7675683402313648af76fd27c6e45a3, type: 3}
-      propertyPath: initialRoamCenter
-      value: 
-      objectReference: {fileID: 2004079925}
-    - target: {fileID: 1907272403777846100, guid: b7675683402313648af76fd27c6e45a3, type: 3}
-      propertyPath: roamWhereChaseEnds
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 3648031596747735805, guid: b7675683402313648af76fd27c6e45a3, type: 3}
       propertyPath: m_LocalPosition.x
       value: -6.3

@@ -8,7 +8,6 @@ public class Quest3ObstacleOption
 {
     public GameObject prefab;
 
-    [Min(0f)]
     public float weight = 1f;
 }
 
@@ -26,28 +25,35 @@ public class Quest3ObstacleManager : MonoBehaviour
 
     [Header("Lanes")]
     [SerializeField] private int laneCount = 5;
-    [SerializeField] private int minimumObstaclesPerWave = 1;
+    [SerializeField] private int minimumObstaclesPerWave = 2;
     [SerializeField] private int maximumObstaclesPerWave = 3;
     [SerializeField] private int safeLaneClearance = 0;
     [SerializeField] private float verticalPadding = 50f;
 
     [Header("Spacing")]
-    [SerializeField] private float minimumWaveSpacing = 300f;
-    [SerializeField] private float maximumWaveSpacing = 450f;
+    [SerializeField] private float minimumWaveSpacing = 280f;
+    [SerializeField] private float maximumWaveSpacing = 360f;
     [SerializeField] private float spawnPadding = 60f;
 
     [Header("Speed")]
-    [SerializeField] private float startingObstacleSpeed = 200f;
-    [SerializeField] private float maximumObstacleSpeed = 400f;
-    [SerializeField] private float acceleration = 8f;
+    [SerializeField] private float startingObstacleSpeed = 180f;
+    [SerializeField] private float maximumObstacleSpeed = 300f;
+    [SerializeField] private float acceleration = 5f;
+
+    [Header("Warmup")]
+    [SerializeField] private float firstWaveDelay = 0.35f;
+    [SerializeField] private int warmupWaves = 1;
 
     [Header("Reset")]
-    [SerializeField] private float resetDelay = 0.35f;
+    [SerializeField] private float resetDelay = 0.45f;
 
     private readonly List<RectTransform> activeObstacles = new List<RectTransform>();
     private readonly HashSet<RectTransform> obstaclesThatPushedSkateboard = new HashSet<RectTransform>();
 
     private Coroutine spawnRoutine;
+    private Coroutine resetRoutine;
+    private readonly Vector3[] corners = new Vector3[4];
+    private int wavesSpawned;
 
     private bool running = false;
     private bool resetting = false;
@@ -76,14 +82,13 @@ public class Quest3ObstacleManager : MonoBehaviour
 
             if (skateboard != null && skateboard.CanBePushed() && RectsOverlap(skateboard.GetHitbox(), obstacle) && !obstaclesThatPushedSkateboard.Contains(obstacle))
             {
-                Debug.Log("OBSTACLE HIT SKATEBOARD");
                 obstaclesThatPushedSkateboard.Add(obstacle);
                 skateboard.PushFromObstacle(obstacle);
             }
 
             if (RectsOverlap(miniPlayer.GetHitbox(), obstacle))
             {
-                StartCoroutine(ResetRun());
+                resetRoutine = StartCoroutine(ResetRun());
                 return;
             }
 
@@ -98,16 +103,14 @@ public class Quest3ObstacleManager : MonoBehaviour
 
     public void BeginMinigame()
     {
-        ClearObstacles();
+        StopMinigame();
+        wavesSpawned = 0;
 
         currentObstacleSpeed = startingObstacleSpeed;
-        safeLane = laneCount / 2;
+        safeLane = UnityEngine.Random.value < 0.5f ? 0 : Mathf.Max(2, laneCount) - 1;
 
         running = true;
         resetting = false;
-
-        if (spawnRoutine != null)
-            StopCoroutine(spawnRoutine);
 
         spawnRoutine = StartCoroutine(SpawnLoop());
     }
@@ -115,6 +118,12 @@ public class Quest3ObstacleManager : MonoBehaviour
     public void StopMinigame()
     {
         running = false;
+        resetting = false;
+
+        if (resetRoutine != null)
+            StopCoroutine(resetRoutine);
+
+        resetRoutine = null;
 
         if (spawnRoutine != null)
             StopCoroutine(spawnRoutine);
@@ -126,16 +135,20 @@ public class Quest3ObstacleManager : MonoBehaviour
 
     private IEnumerator SpawnLoop()
     {
-        yield return new WaitForSecondsRealtime(0.75f);
+        yield return new WaitForSecondsRealtime(Mathf.Max(0f, firstWaveDelay));
 
         while (running)
         {
             SpawnWave();
 
-            float spacing = UnityEngine.Random.Range(minimumWaveSpacing, maximumWaveSpacing);
-            float delay = spacing / Mathf.Max(currentObstacleSpeed, 1f);
+            float spacing = UnityEngine.Random.Range(Mathf.Max(1f, minimumWaveSpacing), Mathf.Max(1f, Mathf.Max(minimumWaveSpacing, maximumWaveSpacing)));
+            float distance = 0f;
 
-            yield return new WaitForSecondsRealtime(delay);
+            while (running && distance < spacing)
+            {
+                yield return null;
+                distance += currentObstacleSpeed * Time.unscaledDeltaTime;
+            }
         }
     }
 
@@ -143,19 +156,30 @@ public class Quest3ObstacleManager : MonoBehaviour
     {
         int actualLaneCount = Mathf.Max(2, laneCount);
 
-        safeLane = Mathf.Clamp(safeLane + UnityEngine.Random.Range(-1, 2), 0, actualLaneCount - 1);
+        int laneStep = UnityEngine.Random.value < 0.5f ? -1 : 1;
+
+        if (safeLane <= 0)
+            laneStep = 1;
+        else if (safeLane >= actualLaneCount - 1)
+            laneStep = -1;
+
+        safeLane = Mathf.Clamp(safeLane + laneStep, 0, actualLaneCount - 1);
         List<int> availableLanes = new List<int>();
 
         for (int lane = 0; lane < actualLaneCount; lane++)
-            if (Mathf.Abs(lane - safeLane) > safeLaneClearance)
+            if (Mathf.Abs(lane - safeLane) > Mathf.Max(0, safeLaneClearance))
                 availableLanes.Add(lane);
 
-        int obstacleCount = UnityEngine.Random.Range(minimumObstaclesPerWave, maximumObstaclesPerWave + 1);
+        int minimumCount = Mathf.Max(1, minimumObstaclesPerWave);
+        int maximumCount = Mathf.Max(minimumCount, maximumObstaclesPerWave);
+        int obstacleCount = wavesSpawned < warmupWaves ? 1 : UnityEngine.Random.Range(minimumCount, maximumCount + 1);
+        wavesSpawned++;
         obstacleCount = Mathf.Min(obstacleCount, availableLanes.Count);
 
         for (int i = 0; i < obstacleCount; i++)
         {
-            int laneListIndex = UnityEngine.Random.Range(0, availableLanes.Count);
+            int centerLaneIndex = availableLanes.IndexOf(actualLaneCount / 2);
+            int laneListIndex = i == 0 && centerLaneIndex >= 0 ? centerLaneIndex : UnityEngine.Random.Range(0, availableLanes.Count);
             int lane = availableLanes[laneListIndex];
 
             availableLanes.RemoveAt(laneListIndex);
@@ -194,10 +218,13 @@ public class Quest3ObstacleManager : MonoBehaviour
 
     private GameObject GetRandomObstaclePrefab()
     {
+        if (obstacleOptions == null || obstacleOptions.Length == 0)
+            return null;
+
         float totalWeight = 0f;
 
         foreach (Quest3ObstacleOption option in obstacleOptions)
-            if (option.prefab != null)
+            if (option != null && option.prefab != null)
                 totalWeight += Mathf.Max(0f, option.weight);
 
         if (totalWeight <= 0f)
@@ -207,7 +234,7 @@ public class Quest3ObstacleManager : MonoBehaviour
 
         foreach (Quest3ObstacleOption option in obstacleOptions)
         {
-            if (option.prefab == null)
+            if (option == null || option.prefab == null || option.weight <= 0f)
                 continue;
 
             roll -= Mathf.Max(0f, option.weight);
@@ -216,7 +243,7 @@ public class Quest3ObstacleManager : MonoBehaviour
                 return option.prefab;
         }
 
-        return obstacleOptions[obstacleOptions.Length - 1].prefab;
+        return null;
     }
 
     private IEnumerator ResetRun()
@@ -245,8 +272,9 @@ public class Quest3ObstacleManager : MonoBehaviour
         ClearObstacles();
 
         currentObstacleSpeed = startingObstacleSpeed;
-        safeLane = laneCount / 2;
+        safeLane = UnityEngine.Random.value < 0.5f ? 0 : Mathf.Max(2, laneCount) - 1;
 
+        wavesSpawned = 0;
         miniPlayer.ResetPosition();
 
         if (skateboard != null)
@@ -263,17 +291,17 @@ public class Quest3ObstacleManager : MonoBehaviour
         running = true;
         resetting = false;
 
+        resetRoutine = null;
         spawnRoutine = StartCoroutine(SpawnLoop());
     }
 
     private bool RectsOverlap(RectTransform first, RectTransform second)
     {
-        return GetWorldRect(first).Overlaps(GetWorldRect(second));
+        return first != null && second != null && GetWorldRect(first).Overlaps(GetWorldRect(second));
     }
 
     private Rect GetWorldRect(RectTransform rectTransform)
     {
-        Vector3[] corners = new Vector3[4];
         rectTransform.GetWorldCorners(corners);
 
         float minX = corners[0].x;

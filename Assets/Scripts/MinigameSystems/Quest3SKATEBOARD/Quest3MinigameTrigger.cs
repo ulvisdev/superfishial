@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
 public class Quest3MinigameTrigger : MonoBehaviour
 {
     [Header("References")]
@@ -8,6 +7,7 @@ public class Quest3MinigameTrigger : MonoBehaviour
     [SerializeField] private Quest3MinigameManager minigameManager;
 
     private bool triggered = false;
+    private bool waitingForExit;
     private Collider triggerCollider;
 
     void Awake()
@@ -23,10 +23,16 @@ public class Quest3MinigameTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (triggered || !other.CompareTag("Player"))
+        if (triggered || waitingForExit || !other.CompareTag("Player"))
             return;
 
         BeginMinigame();
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+            waitingForExit = false;
     }
 
     public void ShowArrowIfNeeded()
@@ -38,17 +44,25 @@ public class Quest3MinigameTrigger : MonoBehaviour
             directionArrow.SetActive(true);
     }
 
+    public void Rearm()
+    {
+        triggered = false;
+        waitingForExit = true;
+        triggerCollider.enabled = true;
+        ShowArrowIfNeeded();
+    }
+
     private void BeginMinigame()
     {
+        if (minigameManager == null)
+            return;
+
         triggered = true;
         triggerCollider.enabled = false;
 
         if (directionArrow != null)
             directionArrow.SetActive(false);
 
-        PlayerFreeze.Instance.FreezePlayer();
-
-        if (minigameManager != null)
-            minigameManager.OpenInstructions();
+        minigameManager.OpenInstructions();
     }
 }

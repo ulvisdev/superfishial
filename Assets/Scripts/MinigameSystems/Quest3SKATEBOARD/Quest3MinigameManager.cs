@@ -5,10 +5,10 @@ public class Quest3MinigameManager : MonoBehaviour
     [Header("UI")]
     [SerializeField] private GameObject instructionsPanel;
     [SerializeField] private GameObject minigamePanel;
+    [SerializeField] private GameObject inventoryFullPanel;
 
     [Header("Minigame")]
     [SerializeField] private Quest3MiniPlayer miniPlayer;
-
     [SerializeField] private Quest3CurrentScroller currentScroller;
     [SerializeField] private Quest3ObstacleManager obstacleManager;
     [SerializeField] private Quest3MinigameSkateboard skateboard;
@@ -22,22 +22,46 @@ public class Quest3MinigameManager : MonoBehaviour
     [SerializeField] private GameObject skateboardEscapeTrigger;
     [SerializeField] private GameObject minigameTrigger;
 
-    void Start()
+    private bool running;
+    private bool completed;
+    private bool rewardPending;
+
+    void Awake()
     {
         instructionsPanel.SetActive(false);
         minigamePanel.SetActive(false);
+
+        if (inventoryFullPanel != null)
+            inventoryFullPanel.SetActive(false);
     }
 
     public void OpenInstructions()
     {
+        if (completed || running)
+            return;
+
+        if (rewardPending)
+        {
+            CompleteMinigame();
+            return;
+        }
+
+        if (PlayerFreeze.Instance != null)
+            PlayerFreeze.Instance.FreezePlayer();
+
         minigamePanel.SetActive(false);
         instructionsPanel.SetActive(true);
     }
 
     public void PressGo()
     {
+        if (running || completed || rewardPending)
+            return;
+
         instructionsPanel.SetActive(false);
         minigamePanel.SetActive(true);
+        Canvas.ForceUpdateCanvases();
+        running = true;
 
         if (miniPlayer != null)
             miniPlayer.BeginMinigame();
@@ -45,58 +69,96 @@ public class Quest3MinigameManager : MonoBehaviour
         if (currentScroller != null)
             currentScroller.BeginMinigame();
 
-        if (obstacleManager != null)
-            obstacleManager.BeginMinigame();
-
         if (skateboard != null)
             skateboard.BeginMinigame();
 
-        Canvas.ForceUpdateCanvases();
-        miniPlayer.BeginMinigame();
+        if (obstacleManager != null)
+            obstacleManager.BeginMinigame();
     }
 
-    public void EndMinigame()
+    private void StopRun()
     {
-        miniPlayer.StopMinigame();
-        minigamePanel.SetActive(false);
-        PlayerFreeze.Instance.UnfreezePlayer();
+        running = false;
+
+        if (obstacleManager != null)
+            obstacleManager.StopMinigame();
+
+        if (miniPlayer != null)
+            miniPlayer.StopMinigame();
 
         if (currentScroller != null)
             currentScroller.StopMinigame();
 
-        if (obstacleManager != null)
-            obstacleManager.StopMinigame();
+        if (skateboard != null)
+            skateboard.StopMinigame();
+    }
+
+    public void EndMinigame()
+    {
+        StopRun();
+        instructionsPanel.SetActive(false);
+        minigamePanel.SetActive(false);
+
+        if (PlayerFreeze.Instance != null)
+            PlayerFreeze.Instance.UnfreezePlayer();
+
+        if (!completed && minigameTrigger != null)
+        {
+            Quest3MinigameTrigger trigger = minigameTrigger.GetComponent<Quest3MinigameTrigger>();
+
+            if (trigger != null)
+                trigger.Rearm();
+        }
     }
 
     public void CompleteMinigame()
     {
-        if (InventoryController.Instance == null || skateboardInventoryPrefab == null)
+        if (completed || (!running && !rewardPending))
             return;
 
-        bool addedToInventory = InventoryController.Instance.AddItem(skateboardInventoryPrefab);
+        rewardPending = true;
+        StopRun();
 
-        if (!addedToInventory)
+        if (InventoryController.Instance == null || skateboardInventoryPrefab == null)
         {
-            Debug.LogWarning("Skateboard could not be added because the inventory is full.");
+            Debug.LogWarning("Quest 3 reward is missing its inventory controller or prefab.");
+            EndMinigame();
             return;
         }
 
-        miniPlayer.StopMinigame();
-        currentScroller.StopMinigame();
-        obstacleManager.StopMinigame();
-        skateboard.StopMinigame();
+        if (!InventoryController.Instance.AddItem(skateboardInventoryPrefab))
+        {
+            EndMinigame();
+
+            if (inventoryFullPanel != null)
+                inventoryFullPanel.SetActive(true);
+
+            Debug.LogWarning("Inventory full. Free a slot, then enter the Quest 3 trigger again to claim the skateboard.");
+            return;
+        }
+
+        completed = true;
+        rewardPending = false;
+        EndMinigame();
+
+        if (inventoryFullPanel != null)
+            inventoryFullPanel.SetActive(false);
+
+        if (worldSkateboard != null)
+            worldSkateboard.SetActive(false);
+
+        if (directionArrow != null)
+            directionArrow.SetActive(false);
+
+        if (skateboardEscapeTrigger != null)
+            skateboardEscapeTrigger.SetActive(false);
+
+        if (minigameTrigger != null)
+            minigameTrigger.SetActive(false);
 
         Item skateboardItem = skateboardInventoryPrefab.GetComponent<Item>();
 
-        skateboardItem.ShowPopUp();
-        minigamePanel.SetActive(false);
-        worldSkateboard.SetActive(false);
-        directionArrow.SetActive(false);
-        skateboardEscapeTrigger.SetActive(false);
-        minigameTrigger.SetActive(false);
-
-        PlayerFreeze.Instance.UnfreezePlayer();
-
-        Debug.Log("Quest 3 skateboard collected!");
+        if (skateboardItem != null)
+            skateboardItem.ShowPopUp();
     }
 }
