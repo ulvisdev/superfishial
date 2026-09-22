@@ -1,7 +1,5 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
 
 public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
@@ -12,6 +10,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public float minDropDistance = 0.5f;
     public float maxDropDistance = 1f;
+    private bool beingDragged = false;
 
     private InventoryController inventoryController;
 
@@ -23,8 +22,17 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         menuController = FindAnyObjectByType<MenuController>();
     }
 
+    void Update()
+    {
+        if (GetComponentInParent<Slot>() && !beingDragged)
+        {
+            GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        }
+    }
+
     public void OnBeginDrag(PointerEventData eventData)
     {
+        beingDragged = true;
         originalParent = transform.parent; //Save OG parent
         transform.SetParent(transform.root); //Above other canvas
         canvasGroup.blocksRaycasts = false;
@@ -38,6 +46,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        beingDragged = false;
         canvasGroup.blocksRaycasts = true; //Enables raycasts
         canvasGroup.alpha = 1f; //No longer transparent
 
@@ -48,6 +57,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
             if (dropItem != null)
             {
                 dropSlot = dropItem.GetComponentInParent<Slot>();
+                GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
             }
         }
         Slot originalSlot = originalParent.GetComponent<Slot>();
@@ -71,6 +81,7 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
                 {
                     targetItem.AddToStack(draggedItem.quantity);
                     originalSlot.currentItem = null;
+                    GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
                     Destroy(gameObject);
                 }
                 else
