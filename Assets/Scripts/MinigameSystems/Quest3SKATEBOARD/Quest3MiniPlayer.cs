@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class Quest3MiniPlayer : MonoBehaviour
 {
@@ -8,9 +9,17 @@ public class Quest3MiniPlayer : MonoBehaviour
     [SerializeField] private RectTransform hitbox;
 
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 300f;
-    [SerializeField] private float acceleration = 900f;
-    [SerializeField] private float deceleration = 1200f;
+    [SerializeField] private float moveSpeed = 320f;
+    [SerializeField] private float acceleration = 1600f;
+    [SerializeField] private float deceleration = 2000f;
+    [SerializeField] private float backwardSpeedMultiplier = 1.4f;
+    [SerializeField] private float turnAcceleration = 3000f;
+
+    [Header("Swimming")]
+    [SerializeField] private Image swimImage;
+    [SerializeField] private Sprite[] swimFrames;
+    [SerializeField] private float swimFramesPerSecond = 10f;
+    [SerializeField] private bool alwaysFaceRight = true;
 
     [Header("Hitbox")]
     [SerializeField] private Vector2 hitboxSize = new Vector2(55f, 30f);
@@ -20,6 +29,8 @@ public class Quest3MiniPlayer : MonoBehaviour
     private Vector3 startScale;
     private Vector2 currentVelocity;
 
+    private float animationTime;
+
     private bool movementEnabled = false;
     private bool facingRight = true;
 
@@ -28,6 +39,10 @@ public class Quest3MiniPlayer : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
         startPosition = rectTransform.anchoredPosition;
         startScale = rectTransform.localScale;
+        facingRight = startScale.x >= 0f;
+
+        if (swimImage == null)
+            swimImage = GetComponentInChildren<Image>(true);
 
         if (hitbox != null)
             hitbox.sizeDelta = hitboxSize;
@@ -38,29 +53,28 @@ public class Quest3MiniPlayer : MonoBehaviour
         if (!movementEnabled)
             return;
 
-        Keyboard keyboard = Keyboard.current;
+        UpdateSwimming();
 
-        if (keyboard == null)
-            return;
+        Keyboard keyboard = Keyboard.current;
 
         Vector2 input = Vector2.zero;
 
-        if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed)
+        if (keyboard != null && (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed))
             input.y += 1f;
 
-        if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed)
+        if (keyboard != null && (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed))
             input.y -= 1f;
 
-        if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed)
+        if (keyboard != null && (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed))
             input.x -= 1f;
 
-        if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed)
+        if (keyboard != null && (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed))
             input.x += 1f;
 
         if (input.sqrMagnitude > 1f)
             input.Normalize();
 
-        if (input.x > 0f)
+        if (alwaysFaceRight || input.x > 0f)
             SetFacingDirection(true);
         else if (input.x < 0f)
             SetFacingDirection(false);
@@ -68,10 +82,25 @@ public class Quest3MiniPlayer : MonoBehaviour
         Vector2 targetVelocity = input * moveSpeed;
         float movementRate = input.sqrMagnitude > 0f ? acceleration : deceleration;
 
+        if (input.x < 0f)
+            targetVelocity.x *= Mathf.Max(0f, backwardSpeedMultiplier);
+
+        if (Vector2.Dot(currentVelocity, targetVelocity) < 0f)
+            movementRate = Mathf.Max(movementRate, turnAcceleration);
+
         currentVelocity = Vector2.MoveTowards(currentVelocity, targetVelocity, movementRate * Time.unscaledDeltaTime);
         rectTransform.anchoredPosition += currentVelocity * Time.unscaledDeltaTime;
 
         ClampToPlayArea();
+    }
+
+    private void UpdateSwimming()
+    {
+        if (swimImage == null || swimFrames == null || swimFrames.Length == 0)
+            return;
+
+        animationTime = Mathf.Repeat(animationTime + Time.unscaledDeltaTime * Mathf.Max(1f, swimFramesPerSecond), swimFrames.Length);
+        swimImage.sprite = swimFrames[Mathf.FloorToInt(animationTime)];
     }
 
     private void SetFacingDirection(bool right)
@@ -90,8 +119,8 @@ public class Quest3MiniPlayer : MonoBehaviour
         Vector2 position = rectTransform.anchoredPosition;
         Vector2 originalPosition = position;
 
-        float halfWidth = rectTransform.rect.width * 0.5f;
-        float halfHeight = rectTransform.rect.height * 0.5f;
+        float halfWidth = rectTransform.rect.width * Mathf.Abs(rectTransform.localScale.x) * 0.5f;
+        float halfHeight = rectTransform.rect.height * Mathf.Abs(rectTransform.localScale.y) * 0.5f;
         float minimumX = playArea.rect.xMin + halfWidth;
         float maximumX = playArea.rect.xMax - halfWidth;
         float minimumY = playArea.rect.yMin + halfHeight;
@@ -122,8 +151,7 @@ public class Quest3MiniPlayer : MonoBehaviour
 
     public void BeginMinigame()
     {
-        rectTransform.anchoredPosition = startPosition;
-        currentVelocity = Vector2.zero;
+        ResetPosition();
         movementEnabled = true;
     }
 
@@ -135,12 +163,18 @@ public class Quest3MiniPlayer : MonoBehaviour
 
     public void ResetPosition()
     {
+        animationTime = 0f;
+        SetFacingDirection(true);
+
+        if (swimImage != null && swimFrames != null && swimFrames.Length > 0)
+            swimImage.sprite = swimFrames[0];
+
         rectTransform.anchoredPosition = startPosition;
         currentVelocity = Vector2.zero;
     }
 
     public RectTransform GetHitbox()
     {
-        return hitbox;
+        return hitbox != null ? hitbox : rectTransform;
     }
 }

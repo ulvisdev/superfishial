@@ -26,14 +26,16 @@ public class Quest3MinigameSkateboard : MonoBehaviour
     [SerializeField] private float verticalEdgePadding = 40f;
 
     [Header("Floating")]
-    [SerializeField] private float bobAmount = 10f;
+    [SerializeField] private float bobAmount = 6f;
     [SerializeField] private float bobSpeed = 2.5f;
-    [SerializeField] private float wobbleAngle = 8f;
+    [SerializeField] private float wobbleAngle = 5f;
     [SerializeField] private float wobbleSpeed = 2f;
 
     private RectTransform rectTransform;
     private Vector2 settledPosition;
     private Vector3 startRotation;
+
+    private readonly Vector3[] corners = new Vector3[4];
 
     private float appearTimer;
     private float baseY;
@@ -84,7 +86,7 @@ public class Quest3MinigameSkateboard : MonoBehaviour
         UpdateDrift(deltaTime);
         UpdateFloating();
 
-        if (catchable && RectsOverlap(miniPlayer.GetHitbox(), hitbox))
+        if (catchable && RectsOverlap(miniPlayer.GetHitbox(), GetHitbox()))
             CatchSkateboard();
     }
 
@@ -121,20 +123,22 @@ public class Quest3MinigameSkateboard : MonoBehaviour
     {
         float targetVelocity = 0f;
 
-        if (pushTimer > 0f)
+        bool pushing = pushTimer > 0f;
+
+        if (pushing)
         {
             pushTimer -= deltaTime;
             targetVelocity = pushDirection * pushSpeed;
         }
 
-        float rate = pushTimer > 0f ? pushAcceleration : pushDeceleration;
+        float rate = pushing ? pushAcceleration : pushDeceleration;
         verticalVelocity = Mathf.MoveTowards(verticalVelocity, targetVelocity, rate * deltaTime);
 
         baseY += verticalVelocity * deltaTime;
 
         float halfHeight = rectTransform.rect.height * 0.5f;
-        float minimumY = playArea.rect.yMin + halfHeight + verticalEdgePadding;
-        float maximumY = playArea.rect.yMax - halfHeight - verticalEdgePadding;
+        float minimumY = playArea.rect.yMin + halfHeight + verticalEdgePadding + Mathf.Abs(bobAmount);
+        float maximumY = playArea.rect.yMax - halfHeight - verticalEdgePadding - Mathf.Abs(bobAmount);
 
         baseY = Mathf.Clamp(baseY, minimumY, maximumY);
 
@@ -166,8 +170,6 @@ public class Quest3MinigameSkateboard : MonoBehaviour
         pushDirection = obstacle.position.y <= rectTransform.position.y ? 1f : -1f;
         pushTimer = pushHoldDuration;
         pushInvulnerabilityTimer = pushInvulnerabilityDuration;
-
-        Debug.Log("Skateboard pushed: " + pushDirection);
     }
 
     public bool CanBePushed()
@@ -177,7 +179,7 @@ public class Quest3MinigameSkateboard : MonoBehaviour
 
     public RectTransform GetHitbox()
     {
-        return hitbox;
+        return hitbox != null ? hitbox : rectTransform;
     }
 
     public void BeginMinigame()
@@ -227,12 +229,11 @@ public class Quest3MinigameSkateboard : MonoBehaviour
 
     private bool RectsOverlap(RectTransform first, RectTransform second)
     {
-        return GetWorldRect(first).Overlaps(GetWorldRect(second));
+        return first != null && second != null && GetWorldRect(first).Overlaps(GetWorldRect(second));
     }
 
     private Rect GetWorldRect(RectTransform rectTransform)
     {
-        Vector3[] corners = new Vector3[4];
         rectTransform.GetWorldCorners(corners);
 
         float minX = corners[0].x;
