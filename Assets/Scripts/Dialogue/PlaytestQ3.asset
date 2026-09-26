@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac8226f1d84236643b0ae3791486efe4, type: 3}
+  m_Name: PlaytestQ3
+  m_EditorClassIdentifier: 
+  DialogueContext: Quest3SKATEBOARD
+  npcName:
+  - Ken
+  - Ken
+  - Ken
+  - Ken
+  - Ken
+  - Ken
+  - Ken
+  npcPortrait:
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  - {fileID: -141459458, guid: e737942bcb6faaf4aa816edd45df004f, type: 3}
+  dialogueLine:
+  - Hiya! My skateboard lowkey got taken by the current, it went somewhere to the
+    right of us...
+  - Would you mind getting it for me? I will pay good.
+  - Excellent. I will be waiting.
+  - Ah, that's a shame. I am still expecting you to help though.
+  - Still waiting on the skateboard.
+  - My gratitude to thee!
+  - Also, Len over there is very sad, could you help him as well?
+  autoProgressLine: 00000000000000
+  autoProgressDelay:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  typingSpeed:
+  - 0.05
+  - 0.075
+  - 0.1
+  - 0.06
+  - 0.075
+  - 0.04
+  - 0.05
+  choices:
+  - dialogueIndex: 1
+    choices:
+    - Yuh
+    - Nuh
+    nextDialogueIndexes: 0200000003000000
+    givesQuest: 0101
+  endsDialogue: 00000101010001
+  voiceSound:
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  - {fileID: 8300000, guid: ab74d04dbba4b9d47ab651e040435fda, type: 3}
+  repeatingVoice: 01010101010101
+  RandomPitch: 00000000000000
+  voicePitch:
+  - 1
+  - 0.75
+  - 1.25
+  - 0.5
+  - 1
+  - 1.5
+  - 1.4
+  questInProgressIndex: 4
+  questCompletedIndex: 5
+  quest: {fileID: 11400000, guid: 1db68b88ca63c234fb7b021759df0e7b, type: 2}

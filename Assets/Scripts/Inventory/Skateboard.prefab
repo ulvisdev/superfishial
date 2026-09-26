@@ -5169,7 +5169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ID: 4
-  itemName: Hammerhead's Skateboard
+  itemName: Cool Skateboard
   itemDescription: A dirty skateboard, a bit worn out.
   quantity: 1
   IsQuestItem: 1
@@ -5316,6 +5316,7 @@ MonoBehaviour:
   player: {fileID: 0}
   spriteRenderer: {fileID: 0}
   playerSpriteRenderer: {fileID: 0}
+  overlaySpriteRenderer: {fileID: 0}
 --- !u!210 &167196316990697182
 SortingGroup:
   m_ObjectHideFlags: 0

@@ -21,7 +21,7 @@ public class NPC : MonoBehaviour, iInteractable
     }
     public bool CanInteract()
     {
-        return !isDialogueActive;
+        return dialogueData != null && (isDialogueActive || !PauseController.IsGamePaused);
     }
 
     public void Interact()

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &317865302992410151
+--- !u!1 &1873332508212298641
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3615254078457271796}
-  - component: {fileID: 4709441312614732814}
-  - component: {fileID: 9008968337279821657}
+  - component: {fileID: 4096043005697019434}
+  - component: {fileID: 1268169288825195414}
+  - component: {fileID: 4600243714831710855}
   m_Layer: 0
   m_Name: BuriedObject
   m_TagString: Untagged
@@ -18,40 +18,40 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &3615254078457271796
+--- !u!224 &4096043005697019434
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 317865302992410151}
+  m_GameObject: {fileID: 1873332508212298641}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 697632279431927367}
+  m_Father: {fileID: 1611005327535194310}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 96, y: 96}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &4709441312614732814
+--- !u!222 &1268169288825195414
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 317865302992410151}
+  m_GameObject: {fileID: 1873332508212298641}
   m_CullTransparentMesh: 1
---- !u!114 &9008968337279821657
+--- !u!114 &4600243714831710855
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 317865302992410151}
+  m_GameObject: {fileID: 1873332508212298641}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
@@ -75,7 +75,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!1 &1824437978090779517
+--- !u!1 &7818207990515959757
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -83,11 +83,11 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 697632279431927367}
-  - component: {fileID: 3711778441538527493}
-  - component: {fileID: 6839175485864838314}
-  - component: {fileID: 5456225240660370633}
-  - component: {fileID: 2837343374064105814}
+  - component: {fileID: 1611005327535194310}
+  - component: {fileID: 4956152626079355063}
+  - component: {fileID: 4000491909017568628}
+  - component: {fileID: 7041438635378430537}
+  - component: {fileID: 3077957868773589208}
   m_Layer: 0
   m_Name: MudPatch
   m_TagString: Untagged
@@ -95,19 +95,19 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &697632279431927367
+--- !u!224 &1611005327535194310
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1824437978090779517}
+  m_GameObject: {fileID: 7818207990515959757}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3615254078457271796}
+  - {fileID: 4096043005697019434}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -115,21 +115,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 124, y: 124}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &3711778441538527493
+--- !u!222 &4956152626079355063
 CanvasRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1824437978090779517}
+  m_GameObject: {fileID: 7818207990515959757}
   m_CullTransparentMesh: 1
---- !u!114 &6839175485864838314
+--- !u!114 &4000491909017568628
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1824437978090779517}
+  m_GameObject: {fileID: 7818207990515959757}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
@@ -143,7 +143,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: c7fc3ab3971eac64f9490ac74e612edf, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c78ddfd5fea00134c978e1603b2ceb7b, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -153,13 +153,13 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &5456225240660370633
+--- !u!114 &7041438635378430537
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1824437978090779517}
+  m_GameObject: {fileID: 7818207990515959757}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
@@ -193,11 +193,11 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 6839175485864838314}
+  m_TargetGraphic: {fileID: 4000491909017568628}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2837343374064105814}
+      - m_Target: {fileID: 3077957868773589208}
         m_TargetAssemblyTypeName: MudPatchUI, Assembly-CSharp
         m_MethodName: Dig
         m_Mode: 1
@@ -209,23 +209,23 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
---- !u!114 &2837343374064105814
+--- !u!114 &3077957868773589208
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1824437978090779517}
+  m_GameObject: {fileID: 7818207990515959757}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 749e59e7cd34a7e4bb055665630c9ab7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  button: {fileID: 5456225240660370633}
-  mudImage: {fileID: 6839175485864838314}
-  buriedObjectImage: {fileID: 9008968337279821657}
+  button: {fileID: 7041438635378430537}
+  mudImage: {fileID: 4000491909017568628}
+  buriedObjectImage: {fileID: 4600243714831710855}
   clicksToClear: 3
   mudStageSprites:
-  - {fileID: 21300000, guid: c7fc3ab3971eac64f9490ac74e612edf, type: 3}
-  - {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 21300000, guid: c78ddfd5fea00134c978e1603b2ceb7b, type: 3}
+  - {fileID: 21300000, guid: 3dc55cb843f5d9745aa8a85deaa51d4d, type: 3}
+  - {fileID: 21300000, guid: 76e7945f7241b6440ac9d336d0e7195a, type: 3}

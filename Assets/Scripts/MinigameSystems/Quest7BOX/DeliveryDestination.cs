@@ -41,6 +41,8 @@ public class DeliveryDestination : MonoBehaviour
     private Quaternion startRotation, endRotation;
     private bool IsPaused => PauseController.IsGamePaused || (playerMovement != null && !playerMovement.IsMovementEnabled);
 
+    [SerializeField] private QuestObjectiveCompletion questObjectiveCompletion;
+
     private void Awake()
     {
         GetComponent<BoxCollider>().isTrigger = true;
@@ -189,6 +191,9 @@ public class DeliveryDestination : MonoBehaviour
     {
         placing = false;
         HasDelivered = true;
+
+        if (questObjectiveCompletion != null) 
+            questObjectiveCompletion.CompleteObjective();
 
         for (int i = 0; i < boxColliders.Length; i++)
         {

@@ -1,15 +1,10 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(Rigidbody))]
-// [RequireComponent(typeof(CapsuleCollider))]
+[RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
-    private enum MovementState
-    {
-        Grounded,
-        Swimming
-    }
+    private enum MovementState { Grounded, Swimming }
 
     [Header("References")]
     [SerializeField] private Animator animator;
@@ -26,6 +21,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float walkAcceleration = 35f;
     [SerializeField] private float walkDeceleration = 50f;
     [SerializeField] private float groundedGravity = 3f;
+    [SerializeField, Min(0.1f)] private float groundStickSpeed = 2f;
 
     [Header("Swimming")]
     [SerializeField] private float swimHorizontalSpeed = 5f;
@@ -33,75 +29,111 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float swimAcceleration = 14f;
     [SerializeField] private float swimDeceleration = 20f;
     [SerializeField] private float takeoffSpeed = 2.5f;
+    [SerializeField, Min(0f)] private float takeoffGroundDelay = 0.15f;
 
-    [Header("Swimming Rotation")]
-    // [SerializeField] private float rotationOffset = -90f;
+    [Header("Swimming Rotation - Visual Only")]
     [SerializeField] private float swimRotationSpeed = 300f;
-    // [SerializeField] private float swimIdleRotation = 0f;
     [SerializeField] private float swimIdleRotationSpeed = 200f;
     [SerializeField] private float swimIdleSpeedThreshold = 0.15f;
 
-    [Header("Ground Detection")]
+    [Header("Controller Shape")]
+    [SerializeField, Min(0.01f)] private float bodyRadius = 0.12f;
+    [SerializeField, Min(0.02f)] private float standingHeight = 0.875f;
+    [SerializeField, Min(0.02f)] private float swimmingHeight = 0.3f;
+    [SerializeField] private Vector3 bodyCentre = Vector3.zero;
+    [SerializeField, Min(0.001f)] private float controllerSkinWidth = 0.012f;
+
+    [Header("Terrain")]
+    [SerializeField, Min(0f)] private float maximumStepHeight = 0.18f;
+    [SerializeField, Min(0f)] private float maximumStepDown = 0.2f;
+    [SerializeField, Range(0f, 89f)] private float maximumGroundAngle = 55f;
     [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private float groundCheckDistance = 0.1f;
-    [SerializeField] private float groundCheckWidth = 0.8f;
-    [SerializeField] private float groundGraceTime = 0.08f;
-
-    private Rigidbody rb;
-
-    [Header("Body Collider")]
-    [SerializeField] private CapsuleCollider capsule;
-    [SerializeField] private float colliderRotationSpeed = 300f;
-
-    private int facingDirection;
-    private bool facingLeft;
-
-    private float swimHeading;
-    private bool swimHeadingActive;
-
-    private MovementState currentState;
-
-    private float horizontalInput;
-    private float depthInput;
-    private float verticalInput;
-
-    private bool isGrounded;
-    private float timeSinceGrounded;
-
-    private bool movementEnabled = true;
-    public bool IsMovementEnabled => movementEnabled;
-    private bool preserveAnimationAfterUnfreeze = false;
-    private float previousAnimatorSpeed = 1f;
-    private bool snapColliderOnReversal;
-
-    //private Vector2 lastSwimDirection = Vector2.up;
+    [SerializeField, Min(0.001f)] private float groundCheckDistance = 0.04f;
+    [SerializeField, Min(0f)] private float groundGraceTime = 0.08f;
 
     [Header("Standing Clearance")]
     [SerializeField] private LayerMask standingObstacleLayers = ~0;
-    [SerializeField] private float standingClearanceTolerance = 0.01f;
+    [SerializeField, Min(0f)] private float standingClearanceTolerance = 0.005f;
+
+    private CharacterController controller;
+    private MovementState currentState;
+    private Vector3 velocity;
+    private Vector3 actualVelocity;
+    private float horizontalInput;
+    private float depthInput;
+    private float verticalInput;
+    private float timeSinceGrounded;
+    private float groundIgnoreTimer;
+    private bool isGrounded;
+    private bool moveTouchedWalkableGround;
+    private int facingDirection;
+    private bool facingLeft;
+    private float swimHeading;
+    private bool swimHeadingActive;
+    private bool movementEnabled = true;
+    private bool preserveAnimationAfterUnfreeze;
+    private bool animationFrozen;
+    private float previousAnimatorSpeed = 1f;
+    private readonly RaycastHit[] groundHits = new RaycastHit[32];
+    private readonly Collider[] clearanceHits = new Collider[32];
+
+    public bool IsMovementEnabled => movementEnabled;
+    public Vector3 Velocity => actualVelocity;
+    public bool IsSwimming => currentState == MovementState.Swimming;
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
-        if (capsule == null)
-            capsule = GetComponentInChildren<CapsuleCollider>();
+        controller = GetComponent<CharacterController>();
+        if (GetComponent<Rigidbody>() != null)
+        {
+            Debug.LogError("PlayerMovement: remove the Player Rigidbody before using this CharacterController version.", this);
+            enabled = false;
+            return;
+        }
 
-        rb.useGravity = false;
-        rb.interpolation = RigidbodyInterpolation.Interpolate;
-        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationY | RigidbodyConstraints.FreezeRotationZ;
+        foreach (Collider body in GetComponentsInChildren<Collider>())
+        {
+            if (body == controller || body.isTrigger || !body.enabled) continue;
+            Debug.LogError("PlayerMovement: disable the old solid body collider. Keep interaction triggers enabled.", body);
+            enabled = false;
+            return;
+        }
+
+        if (Vector3.Distance(transform.lossyScale, Vector3.one) > 0.001f || Vector3.Dot(transform.up, Vector3.up) < 0.999f)
+        {
+            Debug.LogError("PlayerMovement: the Player root must be upright with world scale (1, 1, 1). Scale or rotate Visual instead.", this);
+            enabled = false;
+            return;
+        }
+
+        controller.stepOffset = 0f;
+        controller.radius = Mathf.Max(0.01f, bodyRadius);
+        standingHeight = Mathf.Max(standingHeight, controller.radius * 2f);
+        swimmingHeight = Mathf.Clamp(swimmingHeight, controller.radius * 2f, standingHeight);
+        controller.height = swimmingHeight;
+        controller.center = bodyCentre;
+        controller.skinWidth = Mathf.Clamp(controllerSkinWidth, 0.001f, controller.radius * 0.5f);
+        controller.slopeLimit = maximumGroundAngle;
+        controller.minMoveDistance = 0f;
+        controller.detectCollisions = true;
+        controller.enableOverlapRecovery = true;
+        currentState = MovementState.Swimming;
     }
 
     private void Start()
     {
-        isGrounded = CheckGrounded() && CanStandUpright();
-
-        if (isGrounded)
+        if (!enabled) return;
+        // Preserve the original standing spawn position if the taller shape fits here.
+        if (CanOccupyStandingShape(Vector3.zero))
         {
-            currentState = MovementState.Grounded;
-        }
-        else
-        {
-            currentState = MovementState.Swimming;
+            controller.height = standingHeight;
+            if (TryFindGround(groundCheckDistance, out _))
+            {
+                currentState = MovementState.Grounded;
+                isGrounded = true;
+                controller.stepOffset = Mathf.Min(maximumStepHeight, standingHeight - 0.001f);
+            }
+            else controller.height = swimmingHeight;
         }
     }
 
@@ -109,34 +141,190 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!movementEnabled || PauseController.IsGamePaused)
         {
-            rb.linearVelocity = Vector3.zero;
+            StopImmediately();
             return;
         }
 
+        if (!controller.enabled || Time.deltaTime <= 0f) return;
         ReadInput();
+        float deltaTime = Mathf.Min(Time.deltaTime, 0.1f);
+        // Small movement slices make fast movement less sensitive to frame rate.
+        int count = Mathf.Max(1, Mathf.CeilToInt(deltaTime / 0.02f));
+        Vector3 start = transform.position;
+        float postureLift = 0f;
+        for (int i = 0; i < count; i++) postureLift += SimulateMovement(deltaTime / count);
+        actualVelocity = (transform.position - start - Vector3.up * postureLift) / deltaTime;
+
         UpdateFacingDirection();
         UpdateSwimmingRotation();
         UpdateSpriteFlip();
         UpdateAnimator();
     }
 
-    private void FixedUpdate()
+    private float SimulateMovement(float deltaTime)
     {
-        if (!movementEnabled || PauseController.IsGamePaused)
+        groundIgnoreTimer = Mathf.Max(0f, groundIgnoreTimer - deltaTime);
+        float postureLift = 0f;
+
+        if (currentState == MovementState.Grounded && verticalInput > 0.1f) EnterSwimmingState(true);
+        if (currentState == MovementState.Swimming && groundIgnoreTimer <= 0f && verticalInput <= 0.1f && velocity.y <= 0.1f)
         {
-            rb.linearVelocity = Vector3.zero;
-            return;
+            if (TryFindGround(groundCheckDistance, out _)) TryEnterGroundedState(out postureLift);
         }
 
-        UpdateGroundCheck();
-        UpdateMovementState();
+        bool walking = currentState == MovementState.Grounded;
+        controller.stepOffset = walking ? Mathf.Min(maximumStepHeight, controller.height - 0.001f) : 0f;
 
-        if (currentState == MovementState.Grounded)
-            GroundMovement();
+        if (walking)
+        {
+            Vector3 input = Vector3.ClampMagnitude(new Vector3(horizontalInput, 0f, depthInput), 1f);
+            float rate = input.sqrMagnitude > 0.0001f ? walkAcceleration : walkDeceleration;
+            Vector3 horizontal = Vector3.MoveTowards(new Vector3(velocity.x, 0f, velocity.z), input * walkSpeed, rate * deltaTime);
+            velocity.x = horizontal.x;
+            velocity.z = horizontal.z;
+            velocity.y = isGrounded ? -groundStickSpeed : velocity.y + Physics.gravity.y * groundedGravity * deltaTime;
+        }
         else
-            SwimMovement();
+        {
+            Vector3 input = Vector3.ClampMagnitude(new Vector3(horizontalInput, verticalInput, depthInput), 1f);
+            Vector3 target = new Vector3(input.x * swimHorizontalSpeed, input.y * swimVerticalSpeed, input.z * swimHorizontalSpeed);
+            float rate = input.sqrMagnitude > 0.0001f ? swimAcceleration : swimDeceleration;
+            velocity = Vector3.MoveTowards(velocity, target, rate * deltaTime);
+        }
 
-        UpdateBodyColliderRotation();
+        moveTouchedWalkableGround = false;
+        CollisionFlags flags = controller.Move(velocity * deltaTime);
+        bool supported = moveTouchedWalkableGround && (flags & CollisionFlags.Below) != 0;
+        if ((flags & CollisionFlags.Above) != 0 && velocity.y > 0f) velocity.y = 0f;
+        if ((flags & CollisionFlags.Below) != 0 && velocity.y < 0f) velocity.y = 0f;
+
+        // Descend only to nearby verified ground; never snap while swimming upward.
+        if (walking && !supported && verticalInput <= 0.1f && TryFindGround(maximumStepDown, out float drop))
+        {
+            moveTouchedWalkableGround = false;
+            flags = controller.Move(Vector3.down * (drop + controller.skinWidth));
+            supported = moveTouchedWalkableGround && (flags & CollisionFlags.Below) != 0;
+        }
+
+        isGrounded = supported;
+        if (walking)
+        {
+            timeSinceGrounded = supported ? 0f : timeSinceGrounded + deltaTime;
+            if (timeSinceGrounded > groundGraceTime) EnterSwimmingState(false);
+        }
+        else if (supported && verticalInput <= 0.1f && groundIgnoreTimer <= 0f)
+        {
+            if (TryEnterGroundedState(out float lift)) postureLift += lift;
+        }
+
+        return postureLift;
+    }
+
+    private void EnterSwimmingState(bool takingOff)
+    {
+        currentState = MovementState.Swimming;
+        controller.stepOffset = 0f;
+        controller.height = swimmingHeight;
+        isGrounded = false;
+        timeSinceGrounded = 0f;
+        if (!takingOff) return;
+        groundIgnoreTimer = takeoffGroundDelay;
+        velocity.y = takeoffSpeed;
+    }
+
+    private bool TryEnterGroundedState(out float lift)
+    {
+        lift = 0f;
+        if (currentState == MovementState.Grounded) return true;
+        float rise = Mathf.Max(0f, (standingHeight - controller.height) * 0.5f);
+        if (!CanOccupyStandingShape(Vector3.up * rise)) return false;
+
+        // Keep the capsule's feet at the same height when expanding from swimming.
+        // The full expanded volume was checked above, including the headroom.
+        controller.enabled = false;
+        transform.position += Vector3.up * rise;
+        controller.height = standingHeight;
+        controller.enabled = true;
+        controller.stepOffset = Mathf.Min(maximumStepHeight, standingHeight - 0.001f);
+        currentState = MovementState.Grounded;
+        isGrounded = true;
+        timeSinceGrounded = 0f;
+        velocity.y = 0f;
+        lift = rise;
+        return true;
+    }
+
+    private bool IsObstacle(Collider obstacle)
+    {
+        if (obstacle == null || obstacle == controller || obstacle.transform.IsChildOf(transform)) return false;
+        if (Physics.GetIgnoreLayerCollision(gameObject.layer, obstacle.gameObject.layer)) return false;
+        return !Physics.GetIgnoreCollision(controller, obstacle);
+    }
+
+    private bool IsWalkable(Collider obstacle, Vector3 normal)
+    {
+        return IsObstacle(obstacle) && (groundLayer.value & (1 << obstacle.gameObject.layer)) != 0 && normal.y >= Mathf.Cos(maximumGroundAngle * Mathf.Deg2Rad);
+    }
+
+    private bool CanOccupyStandingShape(Vector3 offset)
+    {
+        Vector3 centre = transform.TransformPoint(bodyCentre) + offset;
+        float segment = standingHeight * 0.5f - controller.radius;
+        Vector3 bottom = centre - Vector3.up * segment;
+        Vector3 top = centre + Vector3.up * segment;
+        float radius = Mathf.Max(0.001f, controller.radius - controller.skinWidth - Mathf.Min(standingClearanceTolerance, controller.radius * 0.1f));
+        int mask = standingObstacleLayers.value | groundLayer.value;
+        int count = Physics.OverlapCapsuleNonAlloc(bottom, top, radius, clearanceHits, mask, QueryTriggerInteraction.Ignore);
+        Collider[] hits = clearanceHits;
+        if (count == clearanceHits.Length)
+        {
+            hits = Physics.OverlapCapsule(bottom, top, radius, mask, QueryTriggerInteraction.Ignore);
+            count = hits.Length;
+        }
+
+        for (int i = 0; i < count; i++)
+            if (IsObstacle(hits[i])) return false;
+
+        return true;
+    }
+
+    private bool TryFindGround(float distance, out float drop)
+    {
+        drop = 0f;
+        float radius = controller.radius * 0.9f;
+        float lift = controller.skinWidth + 0.01f;
+        Vector3 centre = transform.TransformPoint(controller.center);
+        Vector3 feet = centre - Vector3.up * (controller.height * 0.5f);
+        Vector3 origin = feet + Vector3.up * (radius + lift);
+        int mask = standingObstacleLayers.value | groundLayer.value;
+        int count = Physics.SphereCastNonAlloc(origin, radius, Vector3.down, groundHits, distance + lift, mask, QueryTriggerInteraction.Ignore);
+        RaycastHit[] hits = groundHits;
+        if (count == groundHits.Length)
+        {
+            hits = Physics.SphereCastAll(origin, radius, Vector3.down, distance + lift, mask, QueryTriggerInteraction.Ignore);
+            count = hits.Length;
+        }
+
+        RaycastHit nearest = default;
+        float nearestDistance = float.PositiveInfinity;
+        for (int i = 0; i < count; i++)
+        {
+            if (!IsObstacle(hits[i].collider) || hits[i].distance >= nearestDistance) continue;
+            nearest = hits[i];
+            nearestDistance = hits[i].distance;
+        }
+
+        if (!IsWalkable(nearest.collider, nearest.normal)) return false;
+        drop = Mathf.Max(0f, nearest.distance - lift);
+        return drop <= distance;
+    }
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (IsWalkable(hit.collider, hit.normal)) moveTouchedWalkableGround = true;
+        if (currentState != MovementState.Swimming) return;
+        float intoSurface = Vector3.Dot(velocity, hit.normal);
+        if (intoSurface < 0f) velocity -= hit.normal * intoSurface;
     }
 
     private void ReadInput()
@@ -173,45 +361,6 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    private bool CanStandUpright()
-    {
-        if (capsule == null) return false;
-
-        Transform body = capsule.transform;
-        Vector3 scale = body.lossyScale;
-
-        float radius = capsule.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
-        float height = Mathf.Max(capsule.height * Mathf.Abs(scale.y), radius * 2f);
-        float halfSegment = height * 0.5f - radius;
-
-        Quaternion uprightRotation = body.parent != null ? body.parent.rotation : Quaternion.identity;
-        Vector3 uprightAxis = uprightRotation * Vector3.up;
-        Vector3 uprightCentre = body.position + uprightRotation * Vector3.Scale(capsule.center, scale);
-
-        float uprightBottom = uprightCentre.y - radius - halfSegment * Mathf.Abs(uprightAxis.y);
-        float lift = Mathf.Max(0f, GetCapsuleBottomY() - uprightBottom);
-
-        uprightCentre += Vector3.up * lift;
-
-        Vector3 bottomPoint = uprightCentre - uprightAxis * halfSegment;
-        Vector3 topPoint = uprightCentre + uprightAxis * halfSegment;
-        float checkRadius = Mathf.Max(0.001f, radius - Mathf.Clamp(standingClearanceTolerance, 0f, radius * 0.1f));
-
-        Collider[] obstacles = Physics.OverlapCapsule(bottomPoint, topPoint, checkRadius, standingObstacleLayers, QueryTriggerInteraction.Ignore);
-
-        foreach (Collider obstacle in obstacles)
-        {
-            if (obstacle.attachedRigidbody == rb) continue;
-            if (obstacle.transform.IsChildOf(transform)) continue;
-            if (Physics.GetIgnoreLayerCollision(capsule.gameObject.layer, obstacle.gameObject.layer)) continue;
-            if (Physics.GetIgnoreCollision(capsule, obstacle)) continue;
-
-            return false;
-        }
-
-        return true;
-    }
-
     private Vector3 GetFacingDirection()
     {
         float vertical = currentState == MovementState.Swimming ? verticalInput : 0f;
@@ -219,7 +368,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (direction.sqrMagnitude > 0.01f) return direction;
 
-        direction = rb.linearVelocity;
+        direction = actualVelocity;
         if (currentState == MovementState.Grounded) direction.y = 0f;
 
         return direction.magnitude > swimIdleSpeedThreshold ? direction : Vector3.zero;
@@ -248,133 +397,6 @@ public class PlayerMovement : MonoBehaviour
             if (direction.x < -0.01f) facingLeft = true;
             if (direction.x > 0.01f) facingLeft = false;
         }
-    }
-
-    private void UpdateBodyColliderRotation()
-    {
-        if (capsule == null) return;
-
-        if (currentState == MovementState.Grounded)
-        {
-            capsule.transform.localRotation = Quaternion.identity;
-            snapColliderOnReversal = false;
-            return;
-        }
-
-        if (facingDirection == 0 && visual != null)
-        {
-            capsule.transform.localRotation = visual.localRotation * Quaternion.Euler(0f, 0f, 90f);
-            snapColliderOnReversal = false;
-            return;
-        }
-
-        Vector3 direction = GetFacingDirection();
-        if (direction.sqrMagnitude < 0.001f) return;
-
-        Vector3 localDirection = transform.InverseTransformDirection(direction.normalized);
-        Quaternion targetRotation = Quaternion.FromToRotation(Vector3.up, localDirection);
-
-        capsule.transform.localRotation = Quaternion.RotateTowards(capsule.transform.localRotation, targetRotation, colliderRotationSpeed * Time.fixedDeltaTime);
-        snapColliderOnReversal = false;
-    }
-
-    private void GroundMovement()
-    {
-        Vector3 currentVelocity = rb.linearVelocity;
-
-        Vector3 targetVelocity = new Vector3(horizontalInput * walkSpeed, currentVelocity.y, depthInput * walkSpeed);
-
-        float movementRate = Mathf.Abs(horizontalInput) > 0.01f || Mathf.Abs(depthInput) > 0.01f ? walkAcceleration : walkDeceleration;
-        currentVelocity.x = Mathf.MoveTowards(currentVelocity.x, targetVelocity.x, movementRate * Time.fixedDeltaTime);
-        currentVelocity.z = Mathf.MoveTowards(currentVelocity.z, targetVelocity.z, movementRate * Time.fixedDeltaTime);
-        currentVelocity.y += Physics.gravity.y * groundedGravity * Time.fixedDeltaTime;
-
-        rb.linearVelocity = currentVelocity;
-    }
-
-    private void SwimMovement()
-    {
-        Vector3 inputDirection = new Vector3(horizontalInput, verticalInput, depthInput);
-
-        if (inputDirection.magnitude > 1f)
-            inputDirection.Normalize();
-
-        Vector3 targetVelocity = new Vector3(inputDirection.x * swimHorizontalSpeed, inputDirection.y * swimVerticalSpeed, inputDirection.z * swimHorizontalSpeed);
-
-        float movementRate = inputDirection.magnitude > 0.01f ? swimAcceleration : swimDeceleration;
-        rb.linearVelocity = Vector3.MoveTowards(rb.linearVelocity, targetVelocity, movementRate * Time.fixedDeltaTime);
-    }
-
-    private void UpdateMovementState()
-    {
-        if (currentState == MovementState.Grounded)
-        {
-            if (verticalInput > 0.1f)
-            {
-                StartSwimming();
-                return;
-            }
-
-            if (timeSinceGrounded > groundGraceTime)
-            {
-                currentState = MovementState.Swimming;
-                return;
-            }
-        }
-
-        if (currentState == MovementState.Swimming)
-        {
-            bool tryingToMoveDown = verticalInput < -0.05f;
-            bool fallingOntoGround = rb.linearVelocity.y <= 0.1f;
-
-            if (isGrounded && (tryingToMoveDown || fallingOntoGround))
-                EnterGroundedState();
-        }
-    }
-
-    private void EnterGroundedState()
-    {
-        if (currentState == MovementState.Grounded) return;
-        if (!CanStandUpright()) return;
-
-        SnapUprightForLanding();
-        currentState = MovementState.Grounded;
-
-        Vector3 velocity = rb.linearVelocity;
-        velocity.y = 0f;
-        rb.linearVelocity = velocity;
-
-        timeSinceGrounded = 0f;
-        isGrounded = true;
-    }
-
-    private void StartSwimming()
-    {
-        currentState = MovementState.Swimming;
-
-        Vector3 velocity = rb.linearVelocity;
-        velocity.y = takeoffSpeed;
-        rb.linearVelocity = velocity;
-    }
-
-    private void UpdateGroundCheck()
-    {
-        isGrounded = CheckGrounded();
-
-        if (isGrounded)
-            timeSinceGrounded = 0f;
-        else
-            timeSinceGrounded += Time.fixedDeltaTime;
-    }
-
-    private bool CheckGrounded()
-    {
-        Bounds bounds = capsule.bounds;
-
-        Vector3 checkPosition = new Vector3(bounds.center.x, bounds.min.y - groundCheckDistance / 2f, bounds.center.z);
-        Vector3 checkSize = new Vector3(bounds.size.x * groundCheckWidth, groundCheckDistance, bounds.size.z * groundCheckWidth);
-
-        return Physics.CheckBox(checkPosition, checkSize / 2f, Quaternion.identity, groundLayer, QueryTriggerInteraction.Ignore);
     }
 
     private void UpdateSwimmingRotation()
@@ -415,7 +437,6 @@ public class PlayerMovement : MonoBehaviour
         if (horizontalOnly && oppositeHeading)
         {
             swimHeading = targetHeading;
-            snapColliderOnReversal = true;
         }
 
         swimHeading = Mathf.MoveTowardsAngle(swimHeading, targetHeading, swimRotationSpeed * Time.deltaTime);
@@ -429,38 +450,6 @@ public class PlayerMovement : MonoBehaviour
         visual.localRotation = Quaternion.Euler(0f, 0f, spriteRotation);
     }
 
-    private float GetCapsuleBottomY()
-    {
-        Transform body = capsule.transform;
-        Vector3 scale = body.lossyScale;
-
-        float radius = capsule.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
-        float height = Mathf.Max(capsule.height * Mathf.Abs(scale.y), radius * 2f);
-        float halfSegment = height * 0.5f - radius;
-
-        Vector3 centre = body.TransformPoint(capsule.center);
-        float verticalExtent = radius + halfSegment * Mathf.Abs(body.up.y);
-
-        return centre.y - verticalExtent;
-    }
-
-    private void SnapUprightForLanding()
-    {
-        if (capsule != null)
-        {
-            float previousBottom = GetCapsuleBottomY();
-
-            capsule.transform.localRotation = Quaternion.identity;
-
-            float uprightBottom = GetCapsuleBottomY();
-            float lift = Mathf.Max(0f, previousBottom - uprightBottom);
-
-            if (lift > 0f) rb.position += Vector3.up * lift;
-        }
-
-        // if (visual != null) visual.localRotation = Quaternion.identity;
-    }
-
     private void UpdateAnimator()
     {
         if (animator == null)
@@ -472,9 +461,9 @@ public class PlayerMovement : MonoBehaviour
             float relevantSpeed;
 
             if (currentState == MovementState.Grounded)
-                relevantSpeed = new Vector2(rb.linearVelocity.x, rb.linearVelocity.z).magnitude;
+                relevantSpeed = new Vector2(actualVelocity.x, actualVelocity.z).magnitude;
             else
-                relevantSpeed = rb.linearVelocity.magnitude;
+                relevantSpeed = actualVelocity.magnitude;
 
             if (hasInput && relevantSpeed < 0.01f)
                 return;
@@ -482,7 +471,7 @@ public class PlayerMovement : MonoBehaviour
             preserveAnimationAfterUnfreeze = false;
         }
 
-        Vector3 velocity = rb.linearVelocity;
+        Vector3 velocity = actualVelocity;
 
         float groundSpeed = new Vector2(velocity.x, velocity.z).magnitude;
         float swimSpeed = velocity.magnitude;
@@ -500,38 +489,32 @@ public class PlayerMovement : MonoBehaviour
     public void SetMovementEnabled(bool enabled)
     {
         movementEnabled = enabled;
-
-        if (!movementEnabled)
+        if (!enabled)
         {
             horizontalInput = 0f;
             depthInput = 0f;
             verticalInput = 0f;
-
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
+            StopImmediately();
         }
-        else
-            preserveAnimationAfterUnfreeze = true;
+        else preserveAnimationAfterUnfreeze = true;
     }
 
     public void SetAnimationFrozen(bool frozen)
     {
-        if (animator == null)
-            return;
-
+        if (animator == null || animationFrozen == frozen) return;
+        animationFrozen = frozen;
         if (frozen)
         {
             previousAnimatorSpeed = animator.speed;
             animator.speed = 0f;
         }
-        else
-            animator.speed = previousAnimatorSpeed;
+        else animator.speed = previousAnimatorSpeed;
     }
 
     public void StopImmediately()
     {
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
+        velocity = Vector3.zero;
+        actualVelocity = Vector3.zero;
     }
 
     private void UpdateSpriteFlip()
@@ -554,20 +537,43 @@ public class PlayerMovement : MonoBehaviour
         swimDownAction?.action.Disable();
     }
 
-    private void OnDrawGizmosSelected()
+    public void TeleportTo(Vector3 position)
     {
-        CapsuleCollider currentCapsule = capsule != null ? capsule : GetComponentInChildren<CapsuleCollider>();
+        StopImmediately();
 
-        if (currentCapsule == null)
+        horizontalInput = 0f;
+        depthInput = 0f;
+        verticalInput = 0f;
+        timeSinceGrounded = 0f;
+        groundIgnoreTimer = 0f;
+        isGrounded = false;
+        moveTouchedWalkableGround = false;
+        swimHeadingActive = false;
+
+        bool wasEnabled = controller.enabled;
+        controller.enabled = false;
+        controller.stepOffset = 0f;
+        controller.height = swimmingHeight;
+        transform.SetPositionAndRotation(position, Quaternion.identity);
+        currentState = MovementState.Swimming;
+        controller.enabled = wasEnabled;
+
+        Physics.SyncTransforms();
+
+        if (wasEnabled && CanOccupyStandingShape(Vector3.zero))
         {
-            return;
+            controller.height = standingHeight;
+
+            if (TryFindGround(groundCheckDistance, out _))
+            {
+                currentState = MovementState.Grounded;
+                isGrounded = true;
+                controller.stepOffset = Mathf.Min(maximumStepHeight, standingHeight - 0.001f);
+            }
+            else controller.height = swimmingHeight;
         }
 
-        Bounds bounds = currentCapsule.bounds;
-
-        Vector3 checkPosition = new Vector3(bounds.center.x, bounds.min.y - groundCheckDistance / 2f, bounds.center.z);
-        Vector3 checkSize = new Vector3(bounds.size.x * groundCheckWidth, groundCheckDistance, bounds.size.z * groundCheckWidth);
-
-        Gizmos.DrawWireCube(checkPosition, checkSize);
+        preserveAnimationAfterUnfreeze = true;
     }
+
 }

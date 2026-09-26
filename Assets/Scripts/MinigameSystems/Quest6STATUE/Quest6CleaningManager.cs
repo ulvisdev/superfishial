@@ -104,6 +104,8 @@ public class Quest6CleaningManager : MonoBehaviour
 
     float dirtParticleTimer;
 
+    [SerializeField] private QuestObjectiveCompletion questObjectiveCompletion;
+
     void Start()
     {
         normalScale = statueContent.localScale;
@@ -459,6 +461,9 @@ public class Quest6CleaningManager : MonoBehaviour
         minigamePanel.SetActive(false);
 
         SoundEffectManager.StopLoop();
+
+        if (questObjectiveCompletion != null) 
+            questObjectiveCompletion.CompleteObjective();
 
         toolCursor.gameObject.SetActive(false);
         Cursor.visible = true;

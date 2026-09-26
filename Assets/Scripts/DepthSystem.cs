@@ -5,7 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Globalization;
 
-[RequireComponent(typeof(Rigidbody))]
+// [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(CharacterController))]
 public class DepthSystem : MonoBehaviour
 {
     [Header("Depth")]
@@ -39,7 +40,7 @@ public class DepthSystem : MonoBehaviour
     [SerializeField] private float minimumDangerTimeForBreathFlash = 1.25f;
     [SerializeField, Range(0f, 1f)] private float breathFlashAlpha = 0.35f;
 
-    private Rigidbody rb;
+    //private Rigidbody rb;
     private float dangerTimer;
 
     private bool wasTooDeep;
@@ -55,9 +56,12 @@ public class DepthSystem : MonoBehaviour
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
+        //rb = GetComponent<Rigidbody>();
 
-        if (waterSurfaceReference == null || homeRespawnPoint == null || blackoutCanvasGroup == null)
+        if (playerMovementController == null)
+            playerMovementController = GetComponent<PlayerMovement>();
+
+        if (waterSurfaceReference == null || homeRespawnPoint == null || blackoutCanvasGroup == null || playerMovementController == null)
         {
             enabled = false;
             return;
@@ -92,7 +96,9 @@ public class DepthSystem : MonoBehaviour
 
     private void CalculateDepth()
     {
-        float distanceBelowSurface = waterSurfaceReference.position.y - rb.position.y;
+        // float distanceBelowSurface = waterSurfaceReference.position.y - rb.position.y;
+        float distanceBelowSurface = waterSurfaceReference.position.y - transform.position.y;
+
         CurrentDepth = Mathf.Max(0f, distanceBelowSurface * metresPerUnityUnit);
     }
 
@@ -184,12 +190,14 @@ public class DepthSystem : MonoBehaviour
             playerMovementController.StopImmediately();
         }
 
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-        rb.position = homeRespawnPoint.position;
-        rb.rotation = Quaternion.identity;
+        // rb.linearVelocity = Vector3.zero;
+        // rb.angularVelocity = Vector3.zero;
+        // rb.position = homeRespawnPoint.position;
+        // rb.rotation = Quaternion.identity;
 
-        Physics.SyncTransforms();
+        // Physics.SyncTransforms();
+
+        playerMovementController.TeleportTo(homeRespawnPoint.position);
 
         dangerTimer = 0f;
         wasTooDeep = false;
@@ -198,7 +206,7 @@ public class DepthSystem : MonoBehaviour
         CalculateDepth();
         UpdateDepthUI();
 
-        yield return new WaitForFixedUpdate();
+        // yield return new WaitForFixedUpdate();
         yield return null;
 
         if (postTeleportBlackHold > 0f)

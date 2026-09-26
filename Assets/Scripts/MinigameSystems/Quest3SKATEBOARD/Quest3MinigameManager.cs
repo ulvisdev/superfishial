@@ -22,6 +22,8 @@ public class Quest3MinigameManager : MonoBehaviour
     [SerializeField] private GameObject skateboardEscapeTrigger;
     [SerializeField] private GameObject minigameTrigger;
 
+    [SerializeField] private QuestObjectiveCompletion questObjectiveCompletion;
+
     private bool running;
     private bool completed;
     private bool rewardPending;
@@ -139,6 +141,10 @@ public class Quest3MinigameManager : MonoBehaviour
 
         completed = true;
         rewardPending = false;
+
+        if (questObjectiveCompletion != null) 
+            questObjectiveCompletion.CompleteObjective();
+
         EndMinigame();
 
         if (inventoryFullPanel != null)
