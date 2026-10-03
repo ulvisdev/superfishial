@@ -91,6 +91,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField, Min(0)] private int takeoffBubbleCount = 14;
     [SerializeField, Min(0f)] private float landingSandHeightOffset = 0.03f;
 
+    [Header("Idle Sinking")]
+    [SerializeField] private float idleSinkDelay = 5f;
+    [SerializeField] private float idleSinkSpeed = 0.3f;
+    [SerializeField] private float idleSinkAcceleration = 0.15f;
+
+
+    private float swimIdleTimer;
+    private bool IsIdleSinking => IsSwimming && swimIdleTimer > idleSinkDelay;
+
     private bool isBoosting;
     private bool boostMomentum;
     private float boostCharge;
@@ -227,7 +236,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 start = transform.position;
         float postureLift = 0f;
 
-        for (int i = 0; i < count; i++) 
+        for (int i = 0; i < count; i++)
             postureLift += SimulateMovement(deltaTime / count);
 
         actualVelocity = (transform.position - start - Vector3.up * postureLift) / deltaTime;
@@ -254,6 +263,10 @@ public class PlayerMovement : MonoBehaviour
         }
 
         bool walking = currentState == MovementState.Grounded;
+
+        bool hasMovementInput = new Vector3(horizontalInput, verticalInput, depthInput).sqrMagnitude > 0.0001f;
+        swimIdleTimer = walking || hasMovementInput ? 0f : swimIdleTimer + deltaTime;
+
         controller.stepOffset = walking ? Mathf.Min(maximumStepHeight, controller.height - 0.001f) : 0f;
 
         if (walking)
@@ -279,6 +292,12 @@ public class PlayerMovement : MonoBehaviour
                 boostMomentum = false;
             if (!isBoosting && boostMomentum && velocity.magnitude > target.magnitude + 0.1f && (input.sqrMagnitude < 0.0001f || Vector3.Dot(velocity.normalized, target.normalized) > 0.7f))
                 rate = boostCoastDeceleration;
+
+            if (IsIdleSinking)
+            {
+                target = Vector3.down * idleSinkSpeed;
+                rate = idleSinkAcceleration;
+            }
 
             velocity = Vector3.MoveTowards(velocity, target, rate * deltaTime);
         }
@@ -375,13 +394,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void PlayLandingSand()
     {
-        if (landingSand == null || landingSandCount <= 0) 
+        if (landingSand == null || landingSandCount <= 0)
             return;
 
         Vector3 feet = transform.TransformPoint(controller.center) - Vector3.up * (controller.height * 0.5f);
         landingSand.transform.SetPositionAndRotation(feet + Vector3.up * landingSandHeightOffset, Quaternion.LookRotation(Vector3.up));
 
-        if (!landingSand.isPlaying) 
+        if (!landingSand.isPlaying)
             landingSand.Play();
 
         landingSand.Emit(landingSandCount);
@@ -502,6 +521,9 @@ public class PlayerMovement : MonoBehaviour
 
     private Vector3 GetFacingDirection()
     {
+        if (IsIdleSinking)
+            return Vector3.zero;
+
         float vertical = currentState == MovementState.Swimming ? verticalInput : 0f;
         Vector3 direction = new Vector3(horizontalInput, vertical, depthInput);
 
@@ -617,7 +639,9 @@ public class PlayerMovement : MonoBehaviour
         Vector3 velocity = actualVelocity;
 
         float groundSpeed = new Vector2(velocity.x, velocity.z).magnitude;
-        float swimSpeed = velocity.magnitude;
+
+        // float swimSpeed = velocity.magnitude;
+        float swimSpeed = IsIdleSinking ? 0f : velocity.magnitude;
 
         animator.SetFloat("GroundSpeed", groundSpeed);
         animator.SetFloat("SwimSpeed", swimSpeed);
@@ -660,6 +684,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void StopImmediately()
     {
+        swimIdleTimer = 0f;
         velocity = Vector3.zero;
         actualVelocity = Vector3.zero;
     }
