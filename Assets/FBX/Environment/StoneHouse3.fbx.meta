@@ -3,7 +3,27 @@ guid: 0a3661d833cb02c41a588885149c919e
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DeepHouse1_Base1
+    second: {fileID: 2100000, guid: c28b31b527e1c96419bff574671fbf76, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DeepHouse1_Base2
+    second: {fileID: 2100000, guid: 2e5e5e8b14cf97e468529a651988cdd4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DeepHouse1_Base3
+    second: {fileID: 2100000, guid: edbc8da6187a07f48933967ac46f67be, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: DeepHouse1_Base4
+    second: {fileID: 2100000, guid: 72f3eec9c486eea4b9278a342b335b77, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
