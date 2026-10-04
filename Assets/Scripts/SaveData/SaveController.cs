@@ -77,6 +77,7 @@ public class SaveController : MonoBehaviour
             yield break;
         }
 
+        inventory.SetInventoryItems(new List<InventorySaveData>());
         IsReady = true;
 
         if (loadOnStart && HasSave)
@@ -84,7 +85,6 @@ public class SaveController : MonoBehaviour
         else
         {
             saveBlocked = !loadOnStart && HasSave;
-            inventory.SetInventoryItems(new List<InventorySaveData>());
             StoryState.Instance.SetReady(true);
             nextAutosave = Time.unscaledTime + Mathf.Max(1f, autosaveSeconds);
 
@@ -131,7 +131,7 @@ public class SaveController : MonoBehaviour
 
     private bool CanSave()
     {
-        return inventory != null && playerMovement != null && QuestController.Instance != null && StoryState.Instance != null && IsReady && !IsLoading && !saveBlocked && StoryState.Instance.IsReady && NPC.ActiveNPC == null && !PauseController.IsGamePaused && playerMovement.IsMovementEnabled && (PlayerFreeze.Instance == null || !PlayerFreeze.Instance.IsFrozen);
+        return !RoomTravelController.IsTravelling && !StoryCutsceneController.IsPlaying && inventory != null && playerMovement != null && QuestController.Instance != null && StoryState.Instance != null && IsReady && !IsLoading && !saveBlocked && StoryState.Instance.IsReady && NPC.ActiveNPC == null && !PauseController.IsGamePaused && playerMovement.IsMovementEnabled && (PlayerFreeze.Instance == null || !PlayerFreeze.Instance.IsFrozen);
     }
 
     public void SaveGame()
@@ -143,6 +143,7 @@ public class SaveController : MonoBehaviour
         SaveData data = new SaveData
         {
             sceneName = SceneManager.GetActiveScene().name,
+            roomID = RoomTravelController.Instance != null ? RoomTravelController.Instance.CurrentRoomID : null,
             playerPositon = playerMovement.transform.position,
             inventorySaveData = inventory.GetInventoryItems(),
             handinQuestIDs = new List<string>(QuestController.Instance.handinQuestIDs),
@@ -188,7 +189,7 @@ public class SaveController : MonoBehaviour
 
     public void LoadGame()
     {
-        if (!IsReady || IsLoading || NPC.ActiveNPC != null || PauseController.IsGamePaused || (PlayerFreeze.Instance != null && PlayerFreeze.Instance.IsFrozen))
+        if (RoomTravelController.IsTravelling || StoryCutsceneController.IsPlaying || !IsReady || IsLoading || NPC.ActiveNPC != null || PauseController.IsGamePaused || (PlayerFreeze.Instance != null && PlayerFreeze.Instance.IsFrozen))
             return;
 
         if (!HasSave)
@@ -219,6 +220,9 @@ public class SaveController : MonoBehaviour
 
         if (float.IsNaN(data.playerPositon.x) || float.IsNaN(data.playerPositon.y) || float.IsNaN(data.playerPositon.z) || float.IsInfinity(data.playerPositon.x) || float.IsInfinity(data.playerPositon.y) || float.IsInfinity(data.playerPositon.z))
             throw new InvalidDataException("The saved position is invalid.");
+
+        if ((!string.IsNullOrEmpty(data.roomID) && RoomTravelController.Instance == null) || (RoomTravelController.Instance != null && !RoomTravelController.Instance.HasRoom(data.roomID)))
+            throw new InvalidDataException("The saved room is missing from the room catalog.");
 
         ItemDictionary items = FindFirstObjectByType<ItemDictionary>();
         HashSet<int> occupiedSlots = new();
@@ -271,6 +275,17 @@ public class SaveController : MonoBehaviour
         yield return null;
         QuestController.Instance.LoadQuestProgress(restored);
         playerMovement.TeleportTo(data.playerPositon);
+
+        if (RoomTravelController.Instance != null)
+            RoomTravelController.Instance.SelectRoom(data.roomID);
+
+        InteractionDetector detector = playerMovement.GetComponentInChildren<InteractionDetector>();
+
+        if (detector != null)
+            detector.ClearNearby();
+
+        yield return null;
+        yield return null;
         playerMovement.SetMovementEnabled(movementEnabled);
         IsLoading = false;
         StoryState.Instance.SetReady(true);
@@ -279,7 +294,7 @@ public class SaveController : MonoBehaviour
 
     public void StartNewGame()
     {
-        if (!IsReady || IsLoading || NPC.ActiveNPC != null || PauseController.IsGamePaused || (PlayerFreeze.Instance != null && PlayerFreeze.Instance.IsFrozen))
+        if (RoomTravelController.IsTravelling || StoryCutsceneController.IsPlaying || !IsReady || IsLoading || NPC.ActiveNPC != null || PauseController.IsGamePaused || (PlayerFreeze.Instance != null && PlayerFreeze.Instance.IsFrozen))
             return;
 
         try

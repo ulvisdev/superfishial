@@ -7,6 +7,7 @@ public class SaveData
 {
     public int version = 2;
     public string sceneName;
+    public string roomID;
     public Vector3 playerPositon;
     public List<InventorySaveData> inventorySaveData = new();
     public List<QuestSaveEntry> quests = new();

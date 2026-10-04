@@ -5,6 +5,14 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.UI;
 
+[System.Serializable]
+public class CutsceneRoomExit
+{
+    public StoryCutscene cutscene;
+    public string roomID;
+    public Transform arrivalOverride;
+}
+
 public class StoryCutsceneController : MonoBehaviour
 {
     public static bool IsPlaying { get; private set; }
@@ -19,7 +27,14 @@ public class StoryCutsceneController : MonoBehaviour
     [SerializeField] private GameObject continuePrompt;
     [SerializeField] private Image fadeOverlay;
 
+    [Header("Room Handoff")]
+    [SerializeField] private CutsceneRoomExit[] roomExits;
+
     [Header("Transitions")]
+    [SerializeField] private ScreenTransition sharedTransition;
+    [SerializeField] private float exitCoverSeconds = 0.7f;
+    [SerializeField] private float revealSeconds = 0.9f;
+    [SerializeField] private float coveredHoldSeconds = 0.25f;
     [SerializeField] private float fadeSeconds = 0.4f;
     [SerializeField] private Image bubbleOverlay;
     [SerializeField] private Sprite[] bubbleFrames;
@@ -92,7 +107,7 @@ public class StoryCutsceneController : MonoBehaviour
 
     private bool CanStart()
     {
-        return StoryState.Instance != null && StoryState.Instance.IsReady && SaveController.Instance != null && SaveController.Instance.IsReady && !SaveController.Instance.IsLoading && NPC.ActiveNPC == null && !PauseController.IsGamePaused && Time.timeScale > 0f && playerFreeze != null && !playerFreeze.IsFrozen;
+        return !RoomTravelController.IsTravelling && StoryState.Instance != null && StoryState.Instance.IsReady && SaveController.Instance != null && SaveController.Instance.IsReady && !SaveController.Instance.IsLoading && NPC.ActiveNPC == null && !PauseController.IsGamePaused && Time.timeScale > 0f && playerFreeze != null && !playerFreeze.IsFrozen;
     }
 
     [ContextMenu("Play Test Cutscene")]
@@ -128,6 +143,14 @@ public class StoryCutsceneController : MonoBehaviour
                 if (frame == null)
                     return SetupError("Remove empty entries from the cutscene frame list.");
         }
+
+        CutsceneRoomExit exit = FindExit(cutscene);
+
+        if (exit != null && (RoomTravelController.Instance == null || !RoomTravelController.Instance.HasRoom(exit.roomID)))
+            return SetupError("Assign a valid destination room for this cutscene before playing it.");
+
+        if (sharedTransition != null && !sharedTransition.IsConfigured)
+            return SetupError("Assign the shared transition overlay and black Image.");
 
         if (musicSource != null && musicSource == effectsSource)
             return SetupError("Use separate Audio Sources for music and effects.");
@@ -185,7 +208,7 @@ public class StoryCutsceneController : MonoBehaviour
         if (bubbleOverlay != null)
             bubbleOverlay.gameObject.SetActive(false);
 
-        bool bubbles = CanUseBubbles(cutscene);
+        bool bubbles = sharedTransition != null ? cutscene.transition == StoryCutsceneTransition.Bubbles : CanUseBubbles(cutscene);
         yield return Transition(true, bubbles);
         background.sprite = cutscene.presentation == StoryCutscenePresentation.Frames ? cutscene.frames[0] : cutscene.background;
         background.gameObject.SetActive(true);
@@ -248,7 +271,19 @@ public class StoryCutsceneController : MonoBehaviour
         if (continuePrompt != null)
             continuePrompt.SetActive(false);
 
-        yield return Transition(true, bubbles);
+        yield return Transition(true, bubbles, true);
+        CutsceneRoomExit exit = FindExit(cutscene);
+
+        if (exit != null && !RoomTravelController.Instance.Place(exit.roomID, exit.arrivalOverride))
+        {
+            Debug.LogError("Cutscene room handoff failed. Assign Player on RoomTravelController.", this);
+            RestoreGameplay();
+            yield break;
+        }
+
+        RestoreHiddenObjects();
+        yield return null;
+        yield return null;
         background.gameObject.SetActive(false);
 
         if (completionBanner != null)
@@ -283,8 +318,27 @@ public class StoryCutsceneController : MonoBehaviour
         return valid;
     }
 
-    private IEnumerator Transition(bool cover, bool bubbles)
+    private CutsceneRoomExit FindExit(StoryCutscene cutscene)
     {
+        if (roomExits != null)
+            foreach (CutsceneRoomExit exit in roomExits)
+                if (exit != null && exit.cutscene == cutscene)
+                    return exit;
+
+        return null;
+    }
+
+    private IEnumerator Transition(bool cover, bool bubbles, bool exiting = false)
+    {
+        if (sharedTransition != null)
+        {
+            if (cover)
+                yield return sharedTransition.Cover(bubbles);
+            else
+                yield return sharedTransition.Reveal(bubbles);
+
+            yield break;
+        }
         if (bubbles)
         {
             bubbleOverlay.gameObject.SetActive(true);
@@ -298,18 +352,21 @@ public class StoryCutsceneController : MonoBehaviour
             yield break;
         }
 
-        float duration = Mathf.Max(0.01f, fadeSeconds);
+        float duration = Mathf.Max(0.01f, cover ? (exiting ? exitCoverSeconds : fadeSeconds) : revealSeconds);
         float elapsed = 0f;
 
         while (elapsed < duration)
         {
             float progress = Mathf.Clamp01(elapsed / duration);
-            SetFade(cover ? progress : 1f - progress);
+            SetFade(cover ? Mathf.SmoothStep(0f, 1f, progress) : Mathf.SmoothStep(1f, 0f, progress));
             yield return null;
             elapsed += Time.unscaledDeltaTime;
         }
 
         SetFade(cover ? 1f : 0f);
+
+        if (cover)
+            yield return new WaitForSecondsRealtime(Mathf.Max(0f, coveredHoldSeconds));
     }
 
     private IEnumerator PlayFrames(Image target, Sprite[] frames, int first, int last, float fps)
@@ -417,6 +474,13 @@ public class StoryCutsceneController : MonoBehaviour
         }
     }
 
+    private void RestoreHiddenObjects()
+    {
+        for (int i = 0; hiddenStates != null && i < hiddenStates.Length; i++)
+            if (hideDuringCutscene[i] != null)
+                hideDuringCutscene[i].SetActive(hiddenStates[i]);
+    }
+
     private void RestoreGameplay()
     {
         if (!ownsPlayback)
@@ -433,6 +497,9 @@ public class StoryCutsceneController : MonoBehaviour
             effectsSource.Stop();
             effectsSource.ignoreListenerPause = oldEffectsIgnorePause;
         }
+
+        if (sharedTransition != null)
+            sharedTransition.Clear();
 
         if (cutsceneCanvas != null)
             cutsceneCanvas.SetActive(false);
