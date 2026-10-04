@@ -50,22 +50,37 @@ public class QuestWaypointManager : MonoBehaviour
             RefreshWaypoint();
         }
 
-        if (objectiveText != null) objectiveText.text = hideTextWhenPaused && PauseController.IsGamePaused ? "" : currentText;
+        if (objectiveText != null)
+            objectiveText.text = hideTextWhenPaused && PauseController.IsGamePaused ? "" : currentText;
     }
 
     public void RefreshWaypoint()
     {
         QuestController controller = QuestController.Instance;
-        if (controller == null) return;
+
+        if (controller == null || StoryState.Instance == null || !StoryState.Instance.IsReady)
+        {
+            SetTarget(null, "");
+            return;
+        }
 
         foreach (QuestStep step in questSequence)
         {
-            if (step == null || step.quest == null) continue;
+            if (step == null || step.quest == null)
+                continue;
             string questID = step.quest.questID;
-            if (controller.IsQuestHandedIn(questID)) continue;
+
+            if (controller.IsQuestHandedIn(questID))
+                continue;
 
             if (!controller.IsQuestActive(questID))
             {
+                if (!controller.CanAcceptQuest(step.quest))
+                {
+                    SetTarget(null, "");
+                    return;
+                }
+
                 SetTarget(step.npcWaypoint, step.talkText);
                 return;
             }
@@ -79,9 +94,12 @@ public class QuestWaypointManager : MonoBehaviour
             QuestProgress progress = controller.activateQuests.Find(q => q.QuestID == questID);
             foreach (Destination destination in step.destinations)
             {
-                if (destination == null) continue;
+                if (destination == null)
+                    continue;
                 QuestObjective objective = progress.objectives.Find(o => o.objectiveID == destination.objectiveID);
-                if (objective == null || objective.IsCompleted) continue;
+
+                if (objective == null || objective.IsCompleted)
+                    continue;
                 SetTarget(destination.waypoint, destination.objectiveText);
                 return;
             }
@@ -97,9 +115,12 @@ public class QuestWaypointManager : MonoBehaviour
     {
         if (currentWaypoint != waypoint)
         {
-            if (currentWaypoint != null) currentWaypoint.Hide();
+            if (currentWaypoint != null)
+                currentWaypoint.Hide();
             currentWaypoint = waypoint;
-            if (currentWaypoint != null) currentWaypoint.Show();
+
+            if (currentWaypoint != null)
+                currentWaypoint.Show();
         }
         currentText = text;
     }
@@ -108,10 +129,14 @@ public class QuestWaypointManager : MonoBehaviour
     {
         foreach (QuestStep step in questSequence)
         {
-            if (step == null) continue;
-            if (step.npcWaypoint != null) step.npcWaypoint.Hide();
+            if (step == null)
+                continue;
+
+            if (step.npcWaypoint != null)
+                step.npcWaypoint.Hide();
             foreach (Destination destination in step.destinations)
-                if (destination != null && destination.waypoint != null) destination.waypoint.Hide();
+                if (destination != null && destination.waypoint != null)
+                    destination.waypoint.Hide();
         }
         currentWaypoint = null;
     }
@@ -125,12 +150,18 @@ public class QuestWaypointManager : MonoBehaviour
                 Debug.LogWarning("Quest waypoint sequence has an empty quest entry.", this);
                 continue;
             }
-            if (step.npcWaypoint == null) Debug.LogWarning("Assign an NPC waypoint for " + step.quest.questName, this);
+            if (step.npcWaypoint == null)
+                Debug.LogWarning("Assign an NPC waypoint for " + step.quest.questName, this);
             foreach (Destination destination in step.destinations)
             {
-                if (destination == null) continue;
-                if (destination.waypoint == null) Debug.LogWarning("Assign a destination waypoint for " + step.quest.questName, this);
-                if (step.quest.objectives == null || !step.quest.objectives.Exists(o => o.objectiveID == destination.objectiveID)) Debug.LogWarning("Unknown objective ID '" + destination.objectiveID + "' in " + step.quest.questName, this);
+                if (destination == null)
+                    continue;
+
+                if (destination.waypoint == null)
+                    Debug.LogWarning("Assign a destination waypoint for " + step.quest.questName, this);
+
+                if (step.quest.objectives == null || !step.quest.objectives.Exists(o => o.objectiveID == destination.objectiveID))
+                    Debug.LogWarning("Unknown objective ID '" + destination.objectiveID + "' in " + step.quest.questName, this);
             }
         }
     }
@@ -139,6 +170,8 @@ public class QuestWaypointManager : MonoBehaviour
     {
         HideManagedWaypoints();
         currentText = "";
-        if (objectiveText != null) objectiveText.text = "";
+
+        if (objectiveText != null)
+            objectiveText.text = "";
     }
 }

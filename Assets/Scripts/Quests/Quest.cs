@@ -11,12 +11,15 @@ public class Quest : ScriptableObject
     public List<QuestObjective> objectives;
     public List<QuestReward> questRewards;
 
+    [Header("Story")]
+    public StoryCondition availability = new();
+    public string startedFlag;
+    public string handedInFlag;
+
     private void OnValidate()
     {
         if (string.IsNullOrEmpty(questID))
-        {
             questID = questName + Guid.NewGuid().ToString();
-        }
     }
 }
 
@@ -45,7 +48,6 @@ public class QuestProgress
         this.quest = quest;
         objectives = new List<QuestObjective>();
 
-        // Deep copy to avoid modifying the original
         foreach (var obj in quest.objectives)
         {
             objectives.Add(new QuestObjective
@@ -68,7 +70,7 @@ public class QuestProgress
 public class QuestReward
 {
     public RewardType type;
-    public int rewardID; //ItemID etc
+    public int rewardID;
     public int amount = 1;
 }
 

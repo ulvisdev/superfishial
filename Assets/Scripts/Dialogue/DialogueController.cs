@@ -18,18 +18,12 @@ public class DialogueController : MonoBehaviour
     [Header("Text Effects")]
     public DialogueTextEffects dialogueTextEffects;
 
-    // void Awake()
-    // {
-    //     dialogueVertexAnimator = new DialogueVertexAnimator(dialogueText);
-    //     if (Instance == null) Instance = this;
-    //     else Destroy(gameObject);
-    // }
-
     void Awake()
     {
         dialogueVertexAnimator = new DialogueVertexAnimator(dialogueText);
 
-        if (Instance == null) Instance = this;
+        if (Instance == null)
+            Instance = this;
         else
         {
             Destroy(gameObject);
@@ -45,13 +39,20 @@ public class DialogueController : MonoBehaviour
         if (dialogueTextEffects != null)
             dialogueTextEffects.PrepareText(text);
         else
+        {
             dialogueText.text = text;
+            dialogueText.ForceMeshUpdate();
+            dialogueText.maxVisibleCharacters = 0;
+        }
     }
 
     public int GetDialogueCharacterCount()
     {
         if (dialogueTextEffects == null)
-            return 0;
+        {
+            dialogueText.ForceMeshUpdate();
+            return dialogueText.textInfo.characterCount;
+        }
 
         return dialogueTextEffects.GetCharacterCount();
     }
@@ -59,7 +60,7 @@ public class DialogueController : MonoBehaviour
     public char GetDialogueCharacter(int index)
     {
         if (dialogueTextEffects == null)
-            return ' ';
+            return dialogueText.textInfo.characterInfo[index].character;
 
         return dialogueTextEffects.GetCharacter(index);
     }
@@ -68,12 +69,16 @@ public class DialogueController : MonoBehaviour
     {
         if (dialogueTextEffects != null)
             dialogueTextEffects.RevealCharacter(index);
+        else
+            dialogueText.maxVisibleCharacters = index + 1;
     }
 
     public void ShowAllDialogueText()
     {
         if (dialogueTextEffects != null)
             dialogueTextEffects.ShowAll();
+        else
+            dialogueText.maxVisibleCharacters = int.MaxValue;
     }
 
     public void ClearDialogueText()
@@ -111,7 +116,11 @@ public class DialogueController : MonoBehaviour
 
     public void ClearChoices()
     {
-        foreach (Transform child in choiceContainer) Destroy(child.gameObject);
+        foreach (Transform child in choiceContainer)
+        {
+            child.gameObject.SetActive(false);
+            Destroy(child.gameObject);
+        }
     }
 
     public GameObject CreateChoiceButton(string choiceText, UnityEngine.Events.UnityAction onClick)

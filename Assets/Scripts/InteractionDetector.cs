@@ -25,6 +25,9 @@ public class InteractionDetector : MonoBehaviour
 
     public void OnInteract(InputAction.CallbackContext context)
     {
+        if (StoryCutsceneController.IsPlaying)
+            return;
+
         if (!context.started)
             return;
 

@@ -15,6 +15,9 @@ public class MenuController : MonoBehaviour
 
     public void ToggleMenu(InputAction.CallbackContext context)
     {
+        if (StoryCutsceneController.IsPlaying)
+            return;
+
         if (!context.performed)
             return;
 
