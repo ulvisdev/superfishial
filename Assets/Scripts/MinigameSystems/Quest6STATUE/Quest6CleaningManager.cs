@@ -121,7 +121,14 @@ public class Quest6CleaningManager : MonoBehaviour
 
     void Update()
     {
-        if (!minigameActive || !minigamePanel.activeSelf || Mouse.current == null) return;
+        if (!minigameActive || !minigamePanel.activeSelf || Mouse.current == null)
+            return;
+
+        if (PauseController.IsGamePaused)
+        {
+            SoundEffectManager.StopLoop();
+            return;
+        }
 
         if (minigameComplete)
         {
@@ -139,12 +146,12 @@ public class Quest6CleaningManager : MonoBehaviour
 
     public bool CanUseTools()
     {
-        return minigameActive && !minigameComplete;
+        return minigameActive && !minigameComplete && !PauseController.IsGamePaused;
     }
 
     IEnumerator PlayCompletionShine()
     {
-        yield return new WaitForSecondsRealtime(shineDelay);
+        yield return MinigameTime.Wait(shineDelay);
 
         shineStrip.gameObject.SetActive(true);
 
@@ -155,7 +162,7 @@ public class Quest6CleaningManager : MonoBehaviour
 
         while (timer < shineDuration)
         {
-            timer += Time.unscaledDeltaTime;
+            timer += MinigameTime.DeltaTime;
 
             float progress = Mathf.Clamp01(timer / shineDuration);
             float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
@@ -187,7 +194,7 @@ public class Quest6CleaningManager : MonoBehaviour
 
     void UpdateCompletion()
     {
-        completionTimer += Time.unscaledDeltaTime;
+        completionTimer += MinigameTime.DeltaTime;
 
         float popMultiplier = 1f;
         float popStart = shineDelay;
@@ -198,9 +205,9 @@ public class Quest6CleaningManager : MonoBehaviour
             popMultiplier += Mathf.Sin(popProgress * Mathf.PI) * completionPopAmount;
         }
         Vector3 completionScale = normalScale * popMultiplier;
-        statueContent.localScale = Vector3.Lerp(statueContent.localScale, completionScale, zoomSpeed * Time.unscaledDeltaTime);
+        statueContent.localScale = Vector3.Lerp(statueContent.localScale, completionScale, zoomSpeed * MinigameTime.DeltaTime);
 
-        statueContent.anchoredPosition = Vector2.Lerp(statueContent.anchoredPosition, normalPosition, zoomSpeed * Time.unscaledDeltaTime);
+        statueContent.anchoredPosition = Vector2.Lerp(statueContent.anchoredPosition, normalPosition, zoomSpeed * MinigameTime.DeltaTime);
 
         if (completionTimer < completionDelay) return;
 
@@ -219,8 +226,17 @@ public class Quest6CleaningManager : MonoBehaviour
 
     void ExitCompletedMinigame()
     {
-        worldStatue.SetCleaned();
+        if (!minigameActive || !minigameComplete || !canExit)
+            return;
+
+        canExit = false;
+
         CloseMinigame();
+
+        worldStatue.SetCleaned();
+
+        if (questObjectiveCompletion != null)
+            questObjectiveCompletion.CompleteObjective();
     }
 
     void CompleteMinigame()
@@ -240,7 +256,7 @@ public class Quest6CleaningManager : MonoBehaviour
 
     public void TrySpawnDirtParticles(Vector2 screenPosition)
     {
-        dirtParticleTimer -= Time.unscaledDeltaTime;
+        dirtParticleTimer -= MinigameTime.DeltaTime;
         if (dirtParticleTimer > 0f) return;
 
         dirtParticleTimer = dirtParticleInterval;
@@ -330,10 +346,10 @@ public class Quest6CleaningManager : MonoBehaviour
             float targetIntensity = Mouse.current.leftButton.isPressed ? Mathf.Clamp01(mouseSpeed / spongeMouseSpeedForMaxAnimation) : 0f;
             float changeSpeed = targetIntensity > spongeAnimationIntensity ? spongeAnimationAcceleration : spongeAnimationDeceleration;
 
-            spongeAnimationIntensity = Mathf.MoveTowards(spongeAnimationIntensity, targetIntensity, changeSpeed * Time.unscaledDeltaTime);
+            spongeAnimationIntensity = Mathf.MoveTowards(spongeAnimationIntensity, targetIntensity, changeSpeed * MinigameTime.DeltaTime);
 
             float animationSpeed = Mathf.Lerp(spongeMinShakeSpeed, spongeMaxShakeSpeed, spongeAnimationIntensity);
-            spongeAnimationPhase += animationSpeed * Time.unscaledDeltaTime;
+            spongeAnimationPhase += animationSpeed * MinigameTime.DeltaTime;
 
             float wave = Mathf.Sin(spongeAnimationPhase);
             toolVisual.anchoredPosition = new Vector2(0f, wave * spongeShakeDistance * spongeAnimationIntensity);
@@ -342,13 +358,13 @@ public class Quest6CleaningManager : MonoBehaviour
             return;
         }
 
-        spongeAnimationIntensity = Mathf.MoveTowards(spongeAnimationIntensity, 0f, spongeAnimationDeceleration * Time.unscaledDeltaTime);
+        spongeAnimationIntensity = Mathf.MoveTowards(spongeAnimationIntensity, 0f, spongeAnimationDeceleration * MinigameTime.DeltaTime);
 
         if (currentTool == Quest6CleaningTool.Scraper && Mouse.current.leftButton.wasPressedThisFrame) scraperJabTimer = scraperJabDuration;
 
         if (currentTool == Quest6CleaningTool.Scraper && scraperJabTimer > 0f)
         {
-            scraperJabTimer -= Time.unscaledDeltaTime;
+            scraperJabTimer -= MinigameTime.DeltaTime;
             float t = 1f - Mathf.Clamp01(scraperJabTimer / scraperJabDuration);
             float jab = Mathf.Sin(t * Mathf.PI);
             toolVisual.anchoredPosition = scraperJabDirection.normalized * jab * scraperJabDistance;
@@ -356,8 +372,8 @@ public class Quest6CleaningManager : MonoBehaviour
             return;
         }
 
-        toolVisual.anchoredPosition = Vector2.Lerp(toolVisual.anchoredPosition, Vector2.zero, 20f * Time.unscaledDeltaTime);
-        toolVisual.localRotation = Quaternion.Lerp(toolVisual.localRotation, Quaternion.identity, 20f * Time.unscaledDeltaTime);
+        toolVisual.anchoredPosition = Vector2.Lerp(toolVisual.anchoredPosition, Vector2.zero, 20f * MinigameTime.DeltaTime);
+        toolVisual.localRotation = Quaternion.Lerp(toolVisual.localRotation, Quaternion.identity, 20f * MinigameTime.DeltaTime);
     }
 
     public Vector2 GetScraperTipScreenPosition()
@@ -420,12 +436,18 @@ public class Quest6CleaningManager : MonoBehaviour
                 targetPosition = normalPosition - mouseLocal * (zoomScale - 1f) * zoomFollowStrength;
         }
 
-        statueContent.localScale = Vector3.Lerp(statueContent.localScale, targetScale, zoomSpeed * Time.unscaledDeltaTime);
-        statueContent.anchoredPosition = Vector2.Lerp(statueContent.anchoredPosition, targetPosition, zoomSpeed * Time.unscaledDeltaTime);
+        statueContent.localScale = Vector3.Lerp(statueContent.localScale, targetScale, zoomSpeed * MinigameTime.DeltaTime);
+        statueContent.anchoredPosition = Vector2.Lerp(statueContent.anchoredPosition, targetPosition, zoomSpeed * MinigameTime.DeltaTime);
     }
 
     public void OpenMinigame()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
+        if (minigameActive || minigameComplete)
+            return;
+
         minigameActive = true;
 
         instructionsPanel.SetActive(true);
@@ -440,6 +462,9 @@ public class Quest6CleaningManager : MonoBehaviour
 
     public void StartCleaning()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         instructionsPanel.SetActive(false);
         minigamePanel.SetActive(true);
 
@@ -455,22 +480,24 @@ public class Quest6CleaningManager : MonoBehaviour
 
     public void CloseMinigame()
     {
+        if (!minigameActive)
+            return;
+
         minigameActive = false;
-
-        instructionsPanel.SetActive(false);
-        minigamePanel.SetActive(false);
-
-        SoundEffectManager.StopLoop();
-
-        if (questObjectiveCompletion != null) 
-            questObjectiveCompletion.CompleteObjective();
-
-        toolCursor.gameObject.SetActive(false);
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
 
         if (PlayerFreeze.Instance != null)
             PlayerFreeze.Instance.UnfreezePlayer();
+
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
+        StopAllCoroutines();
+
+        instructionsPanel.SetActive(false);
+        minigamePanel.SetActive(false);
+        toolCursor.gameObject.SetActive(false);
+
+        SoundEffectManager.StopLoop();
     }
 
     public bool IsSpongeSelected()
@@ -481,5 +508,22 @@ public class Quest6CleaningManager : MonoBehaviour
     public bool IsScraperSelected()
     {
         return currentTool == Quest6CleaningTool.Scraper;
+    }
+
+    void OnDisable()
+    {
+        if (!minigameActive)
+            return;
+
+        minigameActive = false;
+
+        if (PlayerFreeze.Instance != null)
+            PlayerFreeze.Instance.UnfreezePlayer();
+
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+
+        StopAllCoroutines();
+        SoundEffectManager.StopLoop();
     }
 }

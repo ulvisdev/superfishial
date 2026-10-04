@@ -31,6 +31,9 @@ public class Quest6UIParticle : MonoBehaviour
 
     void Update()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         float delta = Time.unscaledDeltaTime;
         timer += delta;
         velocity.y -= gravity * delta;

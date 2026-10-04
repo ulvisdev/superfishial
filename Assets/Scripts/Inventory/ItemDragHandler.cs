@@ -8,8 +8,8 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     Item itemData;
     MenuController menuController;
 
-    public float minDropDistance = 0.5f;
-    public float maxDropDistance = 1f;
+    // public float minDropDistance = 0.5f;
+    // public float maxDropDistance = 1f;
     private bool beingDragged = false;
 
     private InventoryController inventoryController;
@@ -106,77 +106,81 @@ public class ItemDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         }
         else
         {
-            //No slot under drop point
-            //If where we're dropping is not within the inventory
-            if (!IsWithinInventory(eventData.position))
-            {
-                //Drop our item
-                DropItem(originalSlot);
-            }
-            else
-            {
-                //Snap back to og slot
-                transform.SetParent(originalParent);
-                GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
-            }
-        }
-    }
-
-    bool IsWithinInventory(Vector2 mousePosition)
-    {
-        RectTransform inventoryRect = originalParent.parent.GetComponent<RectTransform>();
-        return RectTransformUtility.RectangleContainsScreenPoint(inventoryRect, mousePosition);
-    }
-
-    void DropItem(Slot originalSlot)
-    {
-        Item item = GetComponent<Item>();
-        int quantity = item.quantity;
-
-        if (quantity > 1)
-        {
-            item.RemoveFromStack();
-
+            //removed drop
             transform.SetParent(originalParent);
             GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 
-            quantity = 1;
+            // //No slot under drop point
+            // //If where we're dropping is not within the inventory
+            // if (!IsWithinInventory(eventData.position))
+            // {
+            //     //Drop our item
+            //     DropItem(originalSlot);
+            // }
+            // else
+            // {
+            //     //Snap back to og slot
+            //     transform.SetParent(originalParent);
+            //     GetComponent<RectTransform>().anchoredPosition = Vector2.zero; //Center
+            // }
         }
-        else
-        {
-            originalSlot.currentItem = null;
-        }
-
-        //Find player
-        Transform playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (playerTransform == null)
-        {
-            Debug.LogError("Missing 'Player' Tag!");
-            return;
-        }
-
-        //Random drop position
-        Vector3 dropOffset = new Vector3(Random.Range(minDropDistance, maxDropDistance), 0f, 0f);
-        Vector3 dropPosition = playerTransform.position + dropOffset;
-
-        //Instantiate drop item and bounce
-        GameObject dropItem = Instantiate(gameObject, dropPosition, Quaternion.identity);
-        Item droppedItem = dropItem.GetComponent<Item>();
-        droppedItem.quantity = 1;
-        dropItem.transform.localScale = new Vector3(1, 1, 1);
-        Rigidbody rb = dropItem.GetComponent<Rigidbody>();
-        if (rb != null)
-            rb.useGravity = true;
-        dropItem.GetComponent<BounceEffect>().StartBounce();
-
-        //Destroy the UI one
-        if (quantity <= 1 && originalSlot.currentItem == null)
-        {
-            Destroy(gameObject);
-        }
-
-        InventoryController.Instance.RebuildItemCounts();
     }
+
+    // bool IsWithinInventory(Vector2 mousePosition)
+    // {
+    //     RectTransform inventoryRect = originalParent.parent.GetComponent<RectTransform>();
+    //     return RectTransformUtility.RectangleContainsScreenPoint(inventoryRect, mousePosition);
+    // }
+
+    // void DropItem(Slot originalSlot)
+    // {
+    //     Item item = GetComponent<Item>();
+    //     int quantity = item.quantity;
+
+    //     if (quantity > 1)
+    //     {
+    //         item.RemoveFromStack();
+
+    //         transform.SetParent(originalParent);
+    //         GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+
+    //         quantity = 1;
+    //     }
+    //     else
+    //     {
+    //         originalSlot.currentItem = null;
+    //     }
+
+    //     //Find player
+    //     Transform playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
+    //     if (playerTransform == null)
+    //     {
+    //         Debug.LogError("Missing 'Player' Tag!");
+    //         return;
+    //     }
+
+    //     //Random drop position
+    //     Vector3 dropOffset = new Vector3(Random.Range(minDropDistance, maxDropDistance), 0f, 0f);
+    //     Vector3 dropPosition = playerTransform.position + dropOffset;
+
+    //     //Instantiate drop item and bounce
+    //     GameObject dropItem = Instantiate(gameObject, dropPosition, Quaternion.identity);
+    //     Item droppedItem = dropItem.GetComponent<Item>();
+    //     droppedItem.quantity = 1;
+    //     dropItem.transform.localScale = new Vector3(1, 1, 1);
+    //     Rigidbody rb = dropItem.GetComponent<Rigidbody>();
+    //     if (rb != null)
+    //         rb.useGravity = true;
+    //     dropItem.GetComponent<BounceEffect>().StartBounce();
+
+    //     //Destroy the UI one
+    //     if (quantity <= 1 && originalSlot.currentItem == null)
+    //     {
+    //         Destroy(gameObject);
+    //     }
+
+    //     InventoryController.Instance.RebuildItemCounts();
+    // }
 
     public void OnPointerClick(PointerEventData eventData)
     {

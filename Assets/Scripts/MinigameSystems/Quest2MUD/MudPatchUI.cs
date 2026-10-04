@@ -53,6 +53,9 @@ public class MudPatchUI : MonoBehaviour
 
     public void Dig()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (isCleared)
             return;
 

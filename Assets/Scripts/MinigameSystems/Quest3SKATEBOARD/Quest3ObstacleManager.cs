@@ -63,10 +63,13 @@ public class Quest3ObstacleManager : MonoBehaviour
 
     void Update()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (!running || resetting)
             return;
 
-        currentObstacleSpeed = Mathf.MoveTowards(currentObstacleSpeed, maximumObstacleSpeed, acceleration * Time.unscaledDeltaTime);
+        currentObstacleSpeed = Mathf.MoveTowards(currentObstacleSpeed, maximumObstacleSpeed, acceleration * MinigameTime.DeltaTime);
 
         for (int i = activeObstacles.Count - 1; i >= 0; i--)
         {
@@ -78,7 +81,7 @@ public class Quest3ObstacleManager : MonoBehaviour
                 continue;
             }
 
-            obstacle.anchoredPosition += Vector2.left * currentObstacleSpeed * Time.unscaledDeltaTime;
+            obstacle.anchoredPosition += Vector2.left * currentObstacleSpeed * MinigameTime.DeltaTime;
 
             if (skateboard != null && skateboard.CanBePushed() && RectsOverlap(skateboard.GetHitbox(), obstacle) && !obstaclesThatPushedSkateboard.Contains(obstacle))
             {
@@ -135,10 +138,16 @@ public class Quest3ObstacleManager : MonoBehaviour
 
     private IEnumerator SpawnLoop()
     {
-        yield return new WaitForSecondsRealtime(Mathf.Max(0f, firstWaveDelay));
+        yield return MinigameTime.Wait(firstWaveDelay);
 
         while (running)
         {
+            while (PauseController.IsGamePaused)
+                yield return null;
+
+            if (!running)
+                yield break;
+
             SpawnWave();
 
             float spacing = UnityEngine.Random.Range(Mathf.Max(1f, minimumWaveSpacing), Mathf.Max(1f, Mathf.Max(minimumWaveSpacing, maximumWaveSpacing)));
@@ -147,7 +156,7 @@ public class Quest3ObstacleManager : MonoBehaviour
             while (running && distance < spacing)
             {
                 yield return null;
-                distance += currentObstacleSpeed * Time.unscaledDeltaTime;
+                distance += currentObstacleSpeed * MinigameTime.DeltaTime;
             }
         }
     }
@@ -267,7 +276,7 @@ public class Quest3ObstacleManager : MonoBehaviour
         if (currentScroller != null)
             currentScroller.PauseMinigame();
 
-        yield return new WaitForSecondsRealtime(resetDelay);
+        yield return MinigameTime.Wait(resetDelay);
 
         ClearObstacles();
 

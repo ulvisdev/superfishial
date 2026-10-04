@@ -39,7 +39,10 @@ public class Quest3MinigameManager : MonoBehaviour
 
     public void OpenInstructions()
     {
-        if (completed || running)
+        if (PauseController.IsGamePaused)
+            return;
+
+        if (completed || running || instructionsPanel.activeSelf)
             return;
 
         if (rewardPending)
@@ -57,6 +60,9 @@ public class Quest3MinigameManager : MonoBehaviour
 
     public void PressGo()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (running || completed || rewardPending)
             return;
 

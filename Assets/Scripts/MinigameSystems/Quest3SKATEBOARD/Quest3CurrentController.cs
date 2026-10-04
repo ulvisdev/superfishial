@@ -29,6 +29,9 @@ public class Quest3CurrentScroller : MonoBehaviour
 
     void Update()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (!scrolling)
             return;
 

@@ -134,6 +134,9 @@ public class MudSearchManager : MonoBehaviour
 
     public void OpenSearch(MudSearchSpot spot)
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (!CanSearch(spot))
             return;
 
@@ -159,6 +162,9 @@ public class MudSearchManager : MonoBehaviour
 
     public void PressInstructionsGo()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (!panelOpen)
             return;
 
@@ -328,13 +334,13 @@ public class MudSearchManager : MonoBehaviour
 
     private IEnumerator CloseAfterFindingRing()
     {
-        yield return new WaitForSeconds(ringFoundCloseDelay);
+        yield return MinigameTime.Wait(ringFoundCloseDelay);
         CloseSearch();
     }
 
     private IEnumerator FinishSpotAfterDelay()
     {
-        yield return new WaitForSeconds(0.6f);
+        yield return MinigameTime.Wait(0.6f);
 
         if (currentSpot != null)
             currentSpot.ClearSpot();

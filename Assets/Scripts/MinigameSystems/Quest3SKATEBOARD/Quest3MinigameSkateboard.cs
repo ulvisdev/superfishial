@@ -60,6 +60,9 @@ public class Quest3MinigameSkateboard : MonoBehaviour
 
     void Update()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (!running || caught)
             return;
 

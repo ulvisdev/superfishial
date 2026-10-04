@@ -40,8 +40,14 @@ public class Quest6DirtEraser : MonoBehaviour
 
     void Update()
     {
-        if (Mouse.current == null) return;
-        if (cleaningManager == null) return;
+        if (PauseController.IsGamePaused)
+            return;
+
+        if (Mouse.current == null) 
+            return;
+            
+        if (cleaningManager == null) 
+            return;
 
         if (!cleaningManager.CanUseTools() || !cleaningManager.IsSpongeSelected())
         {
