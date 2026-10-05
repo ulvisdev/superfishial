@@ -25,6 +25,7 @@ public class ScreenTransition : MonoBehaviour
 
     public IEnumerator Cover(bool useBubbles)
     {
+        if (useBubbles) SoundEffectManager.Play("BubbleTransition", true);
         yield return Animate(true, useBubbles);
         yield return new WaitForSecondsRealtime(Mathf.Max(0f, coveredHoldSeconds));
     }

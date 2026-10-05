@@ -437541,10 +437541,24 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
-  - name: StatueScrape
+  - name: UISFX
     audioClips:
-    - {fileID: 0}
-    - {fileID: 0}
+    - {fileID: 8300000, guid: 40f2935c5c0f8a141bc3f809185e8999, type: 3}
+    - {fileID: 8300000, guid: 40f5c4a29be5efe439f9411f07161f99, type: 3}
+  - name: WalkSFX
+    audioClips:
+    - {fileID: 8300000, guid: 6db304f84d718904e80a9d4421cd1584, type: 3}
+    - {fileID: 8300000, guid: 98b6a764bddc8c848ac213b9c77d3af3, type: 3}
+    - {fileID: 8300000, guid: ada01b7ac77c26449863edc62563a822, type: 3}
+  - name: SwimBoost
+    audioClips:
+    - {fileID: 8300000, guid: a341028c7c4395842abaf2c93a9dbe4f, type: 3}
+  - name: SwimLoop
+    audioClips:
+    - {fileID: 8300000, guid: ccce2d703423edb4996864682df6ccb1, type: 3}
+  - name: BubbleTransition
+    audioClips:
+    - {fileID: 8300000, guid: f7e31c466a8fe8a4b8bd9e4f7e116868, type: 3}
 --- !u!114 &1968575630
 MonoBehaviour:
   m_ObjectHideFlags: 0
