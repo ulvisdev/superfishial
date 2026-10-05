@@ -9,6 +9,9 @@ public class Item : MonoBehaviour
     public string itemDescription;
     public int quantity = 1;
     public bool IsQuestItem = false;
+    
+    [Header("Story")]
+    public string collectedFlag;
 
 
     private TMP_Text quantityText;

@@ -11,25 +11,34 @@ public class PlayerItemCollector : MonoBehaviour
     {
         inventoryController = FindObjectOfType<InventoryController>();
     }
-
     private void OnTriggerEnter(Collider collision)
     {
-        if (collision.CompareTag("Item"))
-        {
-            Item item = collision.GetComponent<Item>();
-            Rigidbody rb = collision.GetComponent<Rigidbody>();
-            if(item != null)
-            {
-                rb.useGravity = false;
-                //Add item inventory
-                bool itemAdded = inventoryController.AddItem(collision.gameObject);
+        if (!collision.CompareTag("Item") || !collision.gameObject.activeInHierarchy)
+            return;
 
-                if (itemAdded)
-                {
-                    item.ShowPopUp();
-                    Destroy(collision.gameObject);
-                }
-            }
-        }
+        if (StoryState.Instance == null || !StoryState.Instance.IsReady || PauseController.IsGamePaused)
+            return;
+
+        Item item = collision.GetComponent<Item>();
+
+        if (item == null)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(item.collectedFlag) && StoryState.Instance.HasFlag(item.collectedFlag))
+            return;
+
+        if (inventoryController == null)
+            inventoryController = InventoryController.Instance;
+
+        if (inventoryController == null || !inventoryController.AddItem(collision.gameObject))
+            return;
+
+        item.ShowPopUp();
+
+        if (!string.IsNullOrWhiteSpace(item.collectedFlag))
+            StoryState.Instance.SetFlag(item.collectedFlag);
+
+        collision.gameObject.SetActive(false);
+        Destroy(collision.gameObject);
     }
 }

@@ -18,7 +18,7 @@ public class NewNPCDialogue : ScriptableObject
     public float[] autoProgressDelay;
     public float[] typingSpeed;
     public DialogueChoice[] choices;
-    public bool[] endsDialogue; // Mark where dialogue ends
+    public bool[] endsDialogue;
 
     [Header("Dialogue Audio")]
     public AudioClip[] voiceSound;
@@ -27,17 +27,48 @@ public class NewNPCDialogue : ScriptableObject
     public float[] voicePitch;
 
     [Header("Dialogue Quest")]
-    public int questInProgressIndex; // Said when quest in progress.
-    public int questCompletedIndex; // Said when quest completed.
-    public Quest quest; // Quest NPC gives
+    public int questInProgressIndex;
+    public int questCompletedIndex;
+    public Quest quest;
+
+    [Header("Story")]
+    public DialogueStartRule[] startRules;
+    public DialogueLineAction[] lineActions;
+    public bool handInOnCompletedDialogueEnd = true;
+    public int questHandedInIndex = -1;
 
 }
 
 [System.Serializable]
 public class DialogueChoice
 {
-    public int dialogueIndex; //Dialogue line where choices appear
-    public string[] choices; //Player response options
-    public int[] nextDialogueIndexes; //Where choice leads
-    public bool[] givesQuest; //If choice gives quest
+    public int dialogueIndex;
+    public string[] choices;
+    public int[] nextDialogueIndexes;
+    public bool[] givesQuest;
+    public DialogueChoiceRule[] storyRules;
+}
+[System.Serializable]
+public class DialogueStartRule
+{
+    public StoryCondition condition = new();
+    public int startIndex;
+    public string completedFlag;
+    public bool handInOnEnd;
+}
+
+[System.Serializable]
+public class DialogueChoiceRule
+{
+    public int choiceIndex;
+    public StoryCondition condition = new();
+    public string flagToSet;
+    public bool handInQuest;
+}
+
+[System.Serializable]
+public class DialogueLineAction
+{
+    public int dialogueIndex;
+    public string flagToSet;
 }

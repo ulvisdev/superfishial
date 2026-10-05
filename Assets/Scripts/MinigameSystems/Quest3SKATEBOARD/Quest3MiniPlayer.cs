@@ -50,6 +50,9 @@ public class Quest3MiniPlayer : MonoBehaviour
 
     void Update()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (!movementEnabled)
             return;
 
