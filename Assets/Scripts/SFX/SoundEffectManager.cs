@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,6 +17,7 @@ public class SoundEffectManager : MonoBehaviour
 
     private static SoundEffectLibrary soundEffectLibrary;
     [SerializeField] private Slider sfxSlider;
+    bool BGMplaying = false;
 
     private void Awake()
     {
@@ -73,6 +75,9 @@ public class SoundEffectManager : MonoBehaviour
     void Start()
     {
         sfxSlider.onValueChanged.AddListener(delegate { OnValueChanged(); });
+        if (BGMplaying == true) return;
+        StartLoop("BGM", 0.25f);
+        BGMplaying = true;
     }
 
     public static void SetVolume(float volume)

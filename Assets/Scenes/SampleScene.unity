@@ -121091,7 +121091,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 10.81
+  field of view: 25
   orthographic: 0
   orthographic size: 2.8125
   m_Depth: 0
@@ -121117,8 +121117,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 533658346}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.026176924, y: 0, z: 0, w: 0.99965733}
-  m_LocalPosition: {x: -169.23378, y: -5.652, z: -174.83}
+  m_LocalRotation: {x: 0.14176513, y: 0, z: 0, w: 0.98990035}
+  m_LocalPosition: {x: -169.416, y: -1.9910002, z: -180.353}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -437633,6 +437633,9 @@ MonoBehaviour:
   - name: BubbleTransition
     audioClips:
     - {fileID: 8300000, guid: f7e31c466a8fe8a4b8bd9e4f7e116868, type: 3}
+  - name: BGM
+    audioClips:
+    - {fileID: 8300000, guid: 2c61aafa483665d46bad3e992e901067, type: 3}
 --- !u!114 &1968575630
 MonoBehaviour:
   m_ObjectHideFlags: 0
