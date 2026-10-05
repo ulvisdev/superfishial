@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac8226f1d84236643b0ae3791486efe4, type: 3}
+  m_Name: SardineDialogue&Q2
+  m_EditorClassIdentifier: 
+  DialogueContext: 
+  npcName:
+  - Mr Sardine
+  npcPortrait: []
+  dialogueLine:
+  - tavern greeting
+  - normal chat end
+  - ring quest offer
+  - accepted - search mud
+  - declined - come back later
+  - quest in progress line
+  - return ring - thanks
+  - small talk after completion
+  autoProgressLine: 0000000000000000
+  autoProgressDelay:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  typingSpeed:
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  choices:
+  - dialogueIndex: 2
+    choices:
+    - ill look for it
+    - not right now
+    nextDialogueIndexes: 0300000004000000
+    givesQuest: 0100
+    storyRules: []
+  endsDialogue: 0001000101010101
+  voiceSound: []
+  repeatingVoice: 0000000000000000
+  RandomPitch: 0000000000000000
+  voicePitch:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  questInProgressIndex: 5
+  questCompletedIndex: 6
+  quest: {fileID: 11400000, guid: 33fed6c5cd3f33441b45dd2904fafd07, type: 2}
+  startRules:
+  - condition:
+      requiredFlags: []
+      forbiddenFlags:
+      - quest1_started
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 0}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 0
+    completedFlag: 
+    handInOnEnd: 0
+  - condition:
+      requiredFlags:
+      - quest1_complete
+      forbiddenFlags:
+      - quest2_started
+      - quest2_complete
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 0}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 2
+    completedFlag: 
+    handInOnEnd: 0
+  lineActions: []
+  handInOnCompletedDialogueEnd: 1
+  questHandedInIndex: 7

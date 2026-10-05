@@ -66,6 +66,7 @@ public class StoryCutsceneController : MonoBehaviour
     private bool oldMusicIgnorePause;
     private bool oldEffectsIgnorePause;
     private float nextCheck;
+    private bool movementReleased;
 
     private void Start()
     {
@@ -182,6 +183,8 @@ public class StoryCutsceneController : MonoBehaviour
     private IEnumerator Play(StoryCutscene cutscene, bool saveCompletion)
     {
         ownsPlayback = true;
+        movementReleased = false;
+
         IsPlaying = true;
         previousPause = PauseController.IsGamePaused;
         previousTimeScale = Time.timeScale;
@@ -237,6 +240,7 @@ public class StoryCutsceneController : MonoBehaviour
             musicSource.Play();
         }
 
+        StartupCurtain.Instance?.ReleaseForCutscene(cutscene);
         yield return Transition(false, bubbles);
 
         if (cutscene.presentation == StoryCutscenePresentation.Journal)
@@ -289,7 +293,7 @@ public class StoryCutsceneController : MonoBehaviour
         if (completionBanner != null)
             completionBanner.gameObject.SetActive(false);
 
-        yield return Transition(false, bubbles);
+        yield return Transition(false, bubbles, true);
         RestoreGameplay();
 
         if (saveCompletion && StoryState.Instance != null)
@@ -299,6 +303,23 @@ public class StoryCutsceneController : MonoBehaviour
             if (SaveController.Instance != null)
                 SaveController.Instance.SaveGame();
         }
+    }
+
+    private void ResumeGameplayControl()
+    {
+        if (!ownsPlayback || movementReleased)
+            return;
+
+        movementReleased = true;
+        Time.timeScale = previousTimeScale;
+        PauseController.SetPause(previousPause);
+
+        for (int i = 0; behaviourStates != null && i < behaviourStates.Length; i++)
+            if (disableDuringCutscene[i] != null)
+                disableDuringCutscene[i].enabled = behaviourStates[i];
+
+        if (playerFreeze != null)
+            playerFreeze.UnfreezePlayer();
     }
 
     private bool CanUseBubbles(StoryCutscene cutscene)
@@ -335,7 +356,7 @@ public class StoryCutsceneController : MonoBehaviour
             if (cover)
                 yield return sharedTransition.Cover(bubbles);
             else
-                yield return sharedTransition.Reveal(bubbles);
+                yield return sharedTransition.Reveal(bubbles, exiting ? ResumeGameplayControl : null);
 
             yield break;
         }
@@ -504,11 +525,7 @@ public class StoryCutsceneController : MonoBehaviour
         if (cutsceneCanvas != null)
             cutsceneCanvas.SetActive(false);
 
-        Time.timeScale = previousTimeScale;
-        PauseController.SetPause(previousPause);
-
-        if (playerFreeze != null)
-            playerFreeze.UnfreezePlayer();
+        ResumeGameplayControl();
 
         for (int i = 0; hiddenStates != null && i < hiddenStates.Length; i++)
             if (hideDuringCutscene[i] != null)

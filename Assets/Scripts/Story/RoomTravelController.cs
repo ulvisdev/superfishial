@@ -113,7 +113,7 @@ public class RoomTravelController : MonoBehaviour
         Place(id, arrivalOverride);
         yield return null;
         yield return null;
-        yield return transition.Reveal(bubbles);
+        yield return transition.Reveal(bubbles, ResumeMovement);
         Release();
         SaveController.Instance.SaveGame();
     }
@@ -131,6 +131,19 @@ public class RoomTravelController : MonoBehaviour
 
         ownsFreeze = false;
         travelling = false;
+    }
+
+    private void ResumeMovement()
+    {
+        if (!ownsFreeze)
+            return;
+
+        PauseController.SetPause(previousPause);
+
+        if (playerFreeze != null)
+            playerFreeze.UnfreezePlayer();
+
+        ownsFreeze = false;
     }
 
     private void OnDisable()

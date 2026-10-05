@@ -21,7 +21,7 @@ MonoBehaviour:
     requiredHandedInQuest: {fileID: 0}
   completedFlag: map_reconstruction_seen
   presentation: 0
-  transition: 0
+  transition: 1
   background: {fileID: 21300000, guid: 5931c280f65a2f7449353c3bd99845a7, type: 3}
   journalHands: {fileID: 21300000, guid: 7bca6f2c05ec1914a9ee33045985b986, type: 3}
   completionBanner: {fileID: 21300000, guid: 1cc83e1ef2cb4f1429cfea908865f9a4, type: 3}

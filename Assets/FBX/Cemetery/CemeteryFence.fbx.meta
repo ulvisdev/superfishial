@@ -3,7 +3,17 @@ guid: 35fb67e1ecc972942a7901ff3577d381
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CemeteryGateMetal
+    second: {fileID: 2100000, guid: f137aebd7fe8fe44eb693b05b79a1024, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CemeteryGateRock
+    second: {fileID: 2100000, guid: b59c2c5d20033eb44ab90a2832ba0cc8, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

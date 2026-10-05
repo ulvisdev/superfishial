@@ -15,14 +15,22 @@ MonoBehaviour:
   questID: LostInTheSilt6bf58081-61b9-43e7-95c8-5f2488d283ef
   questName: LostInTheSilt
   description: Find the lost wedding ring
-  objectives: []
-  questRewards: []
+  objectives:
+  - objectiveID: 3
+    description: Find the lost wedding ring in the mud piles
+    type: 0
+    requiredAmount: 1
+    currentAmount: 0
+  questRewards:
+  - type: 3
+    rewardID: 0
+    amount: 0
   availability:
     requiredFlags:
-    - map_reconstruction_seen
+    - quest1_complete
     forbiddenFlags: []
     requiredActiveQuest: {fileID: 0}
     requiredReadyQuest: {fileID: 0}
     requiredHandedInQuest: {fileID: 0}
-  startedFlag: 
-  handedInFlag: 
+  startedFlag: quest2_started
+  handedInFlag: quest2_complete

@@ -55,7 +55,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 36ff199dc3fec7543bafc3bd1cbecfc5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -76,7 +76,7 @@ SpriteRenderer:
   m_SortingLayerID: -405252727
   m_SortingLayer: 1
   m_SortingOrder: 1
-  m_Sprite: {fileID: 21300000, guid: 810abcdf2dd28f6449e4fb06563f302d, type: 3}
+  m_Sprite: {fileID: -350641659, guid: 52c9593451150d847bface97bdb9b930, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -5091,8 +5091,8 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6787592476747699403}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -5.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5103,7 +5103,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 8, y: 0.19999981}
   m_SizeDelta: {x: 48, y: 48}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &821834379315524124
@@ -5134,7 +5134,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 810abcdf2dd28f6449e4fb06563f302d, type: 3}
+  m_Sprite: {fileID: -350641659, guid: 52c9593451150d847bface97bdb9b930, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -5173,6 +5173,7 @@ MonoBehaviour:
   itemDescription: An old, used sponge
   quantity: 1
   IsQuestItem: 0
+  collectedFlag: 
   spriteRenderer: {fileID: 7511579769233006272}
   visuals: {fileID: 5838648142333426599}
 --- !u!114 &4970973540269893173
@@ -5187,8 +5188,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1eaf463290a24624091981c3dc79e667, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minDropDistance: 1
-  maxDropDistance: 1
 --- !u!114 &5838648142333426599
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5316,6 +5315,7 @@ MonoBehaviour:
   player: {fileID: 0}
   spriteRenderer: {fileID: 0}
   playerSpriteRenderer: {fileID: 0}
+  overlaySpriteRenderer: {fileID: 0}
 --- !u!210 &167196316990697182
 SortingGroup:
   m_ObjectHideFlags: 0

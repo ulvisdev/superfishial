@@ -20,7 +20,7 @@ MonoBehaviour:
     requiredHandedInQuest: {fileID: 0}
   completedFlag: opening_seen
   presentation: 1
-  transition: 0
+  transition: 1
   background: {fileID: 0}
   journalHands: {fileID: 0}
   completionBanner: {fileID: 0}
@@ -130,7 +130,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 772bb7c82e35f7b428882b264a912dc9, type: 3}
   - {fileID: 21300000, guid: c4af1bef40d388a4fa8f3886c9cd9c80, type: 3}
   - {fileID: 21300000, guid: 3d8d2cfca3cabb649b89ef6b2e0d249d, type: 3}
-  framesPerSecond: 3
+  framesPerSecond: 12
   music: {fileID: 0}
   loopMusic: 1
   musicVolume: 0.7

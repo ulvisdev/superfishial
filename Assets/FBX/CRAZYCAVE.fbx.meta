@@ -3,7 +3,12 @@ guid: 2ff19ac709d11224d9509838b1386bc8
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Cave
+    second: {fileID: 2100000, guid: 47eeca1ec83800840a781f8d8fdb3d29, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

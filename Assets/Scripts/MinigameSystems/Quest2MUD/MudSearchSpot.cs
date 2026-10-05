@@ -43,11 +43,22 @@ public class MudSearchSpot : MonoBehaviour, iInteractable
         return MudSearchManager.Instance.CanSearch(this);
     }
 
-    public void ClearSpot()
+    public bool WouldHideManager(Transform manager)
     {
-        isCleared = true;
+        return mudVisual != null && manager.IsChildOf(mudVisual.transform);
+    }
+
+    public void ApplyState(bool cleared, bool visible)
+    {
+        isCleared = cleared;
 
         if (mudVisual != null)
-            mudVisual.SetActive(false);
+            mudVisual.SetActive(visible);
+    }
+
+    public void ClearSpot()
+    {
+        if (MudSearchManager.Instance != null)
+            MudSearchManager.Instance.RecordClearedSpot(this);
     }
 }

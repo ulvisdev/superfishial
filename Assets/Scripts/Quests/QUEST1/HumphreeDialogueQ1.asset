@@ -16,6 +16,9 @@ MonoBehaviour:
   npcName:
   - Humphree
   - Humphree
+  - Humphree
+  - Humphree
+  - Humphree
   npcPortrait: []
   dialogueLine:
   - Used to be a much better map than this. Council stopped issuing them years ago.
@@ -42,7 +45,7 @@ MonoBehaviour:
   choices:
   - dialogueIndex: 0
     choices:
-    - I'll Find the pieces
+    - I'll find the pieces
     nextDialogueIndexes: 01000000
     givesQuest: 01
     storyRules: []

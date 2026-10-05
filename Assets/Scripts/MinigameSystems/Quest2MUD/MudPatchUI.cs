@@ -44,7 +44,7 @@ public class MudPatchUI : MonoBehaviour
         button.interactable = true;
         mudImage.enabled = true;
 
-        if (mudStageSprites.Length > 0)
+        if (mudStageSprites != null && mudStageSprites.Length > 0)
             mudImage.sprite = mudStageSprites[0];
 
         buriedObjectImage.enabled = false;
@@ -53,7 +53,7 @@ public class MudPatchUI : MonoBehaviour
 
     public void Dig()
     {
-        if (PauseController.IsGamePaused)
+        if (manager == null || !manager.CanDig || PauseController.IsGamePaused)
             return;
 
         if (isCleared)
@@ -74,7 +74,7 @@ public class MudPatchUI : MonoBehaviour
 
     private void UpdateMudVisual()
     {
-        if (mudStageSprites.Length == 0)
+        if (mudStageSprites == null || mudStageSprites.Length == 0)
             return;
 
         int spriteIndex = currentClicks;

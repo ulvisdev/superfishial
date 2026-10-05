@@ -4,7 +4,7 @@ Shader "Superfishial/PlayerCenteredWorldFog"
     {
         _FogColor("Fog Color", Color) = (0.02, 0.07, 0.12, 1)
         _FogStart("Fog Start", Float) = 10
-        _FogEnd("Fog End", Float) = 50
+        _FogEnd("Fog End", Float) = 40
     }
 
     SubShader

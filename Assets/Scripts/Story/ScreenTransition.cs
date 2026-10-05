@@ -13,6 +13,8 @@ public class ScreenTransition : MonoBehaviour
     [SerializeField] private float coverSeconds = 0.7f;
     [SerializeField] private float coveredHoldSeconds = 0.25f;
     [SerializeField] private float revealSeconds = 0.9f;
+    [SerializeField] private float resumeBeforeEndSeconds = 0.15f;
+    [SerializeField] private Color transitionColor = Color.black;
 
     public bool IsConfigured => overlay != null && black != null;
 
@@ -27,13 +29,20 @@ public class ScreenTransition : MonoBehaviour
         yield return new WaitForSecondsRealtime(Mathf.Max(0f, coveredHoldSeconds));
     }
 
-    public IEnumerator Reveal(bool useBubbles)
+    private void SetTransitionAlpha(float alpha)
     {
-        yield return Animate(false, useBubbles);
+        Color color = transitionColor;
+        color.a = alpha;
+        black.color = color;
+    }
+
+    public IEnumerator Reveal(bool useBubbles, System.Action onReady = null)
+    {
+        yield return Animate(false, useBubbles, onReady);
         Clear();
     }
 
-    private IEnumerator Animate(bool cover, bool useBubbles)
+    private IEnumerator Animate(bool cover, bool useBubbles, System.Action onReady = null)
     {
         overlay.alpha = 1f;
         overlay.blocksRaycasts = true;
@@ -58,19 +67,28 @@ public class ScreenTransition : MonoBehaviour
         while (elapsed < duration)
         {
             float t = Mathf.Clamp01(elapsed / duration);
-            black.color = new Color(0f, 0f, 0f, cover ? Mathf.SmoothStep(0f, 1f, t) : Mathf.SmoothStep(1f, 0f, t));
+            SetTransitionAlpha(cover ? Mathf.SmoothStep(0f, 1f, t) : Mathf.SmoothStep(1f, 0f, t));
 
             if (valid)
                 bubbles.sprite = bubbleFrames[Mathf.Min(last, first + Mathf.FloorToInt(t * (last - first + 1)))];
+
+            if (!cover && elapsed >= Mathf.Max(0f, duration - resumeBeforeEndSeconds))
+            {
+                onReady?.Invoke();
+                onReady = null;
+            }
 
             yield return null;
             elapsed += Time.unscaledDeltaTime;
         }
 
-        black.color = new Color(0f, 0f, 0f, cover ? 1f : 0f);
+        SetTransitionAlpha(cover ? 1f : 0f);
 
         if (valid)
             bubbles.sprite = bubbleFrames[last];
+
+        if (!cover)
+            onReady?.Invoke();
     }
 
     public void Clear()

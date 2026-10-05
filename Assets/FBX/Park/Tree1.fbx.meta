@@ -3,7 +3,22 @@ guid: ea856bf4c307abc47aa5db1ef2e7147e
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MudPile
+    second: {fileID: 2100000, guid: 28b3652be31c54a419741e9098da3e6b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TreeBase
+    second: {fileID: 2100000, guid: 465bf4a5a4f426c439f7d499a0d1c744, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: TreeTop
+    second: {fileID: 2100000, guid: 9b4b6ec0baff8aa4ea935417505a24b0, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

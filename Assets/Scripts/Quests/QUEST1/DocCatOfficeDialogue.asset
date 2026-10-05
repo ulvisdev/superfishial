@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac8226f1d84236643b0ae3791486efe4, type: 3}
+  m_Name: DocCatOfficeDialogue
+  m_EditorClassIdentifier: 
+  DialogueContext: 
+  npcName:
+  - Doc Cat
+  - Doc Cat
+  - Doc Cat
+  - Doc Cat
+  npcPortrait: []
+  dialogueLine:
+  - Hello! U mustve hurt your head.
+  - Such a shame innit cuh?
+  - Thank u so much for helping me with the ingredients!!!
+  autoProgressLine: 000000
+  autoProgressDelay:
+  - 0
+  - 0
+  - 0
+  typingSpeed:
+  - 0.05
+  - 0.05
+  - 0.05
+  choices: []
+  endsDialogue: 000101
+  voiceSound: []
+  repeatingVoice: 000000
+  RandomPitch: 000000
+  voicePitch:
+  - 0
+  - 0
+  - 0
+  questInProgressIndex: 0
+  questCompletedIndex: 0
+  quest: {fileID: 0}
+  startRules:
+  - condition:
+      requiredFlags: []
+      forbiddenFlags: []
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 11400000, guid: f2aa3943885489043907d335b728e0a8, type: 2}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 3
+    completedFlag: 
+    handInOnEnd: 1
+  lineActions: []
+  handInOnCompletedDialogueEnd: 1
+  questHandedInIndex: -1

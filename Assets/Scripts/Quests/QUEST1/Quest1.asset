@@ -26,7 +26,8 @@ MonoBehaviour:
     rewardID: 0
     amount: 0
   availability:
-    requiredFlags: []
+    requiredFlags:
+    - humphree_home
     forbiddenFlags: []
     requiredActiveQuest: {fileID: 0}
     requiredReadyQuest: {fileID: 0}

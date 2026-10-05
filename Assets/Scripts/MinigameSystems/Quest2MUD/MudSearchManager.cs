@@ -17,7 +17,12 @@ public class MudSearchManager : MonoBehaviour
 
     [Header("Quest")]
     [SerializeField] private MudSearchSpot[] searchSpots;
-    [SerializeField] private bool startQuestAutomaticallyForTesting = true;
+    [SerializeField] private bool startQuestAutomaticallyForTesting = false;
+    [SerializeField] private string questStartedFlag = "quest2_started";
+    [SerializeField] private string ringFoundFlag = "ring_found";
+    [SerializeField] private string questCompleteFlag = "quest2_complete";
+    [SerializeField] private string ringLocationPrefix = "q2_ring_spot_";
+    [SerializeField] private string clearedSpotPrefix = "q2_mud_cleared_";
 
     [Header("UI")]
     [SerializeField] private GameObject searchPanel;
@@ -44,6 +49,13 @@ public class MudSearchManager : MonoBehaviour
     [SerializeField] private float ringFoundCloseDelay = 1.5f;
 
     private bool closingAfterRing = false;
+    private bool rewardPending;
+    private bool syncing;
+    private bool initialized;
+    private bool ownsFreeze;
+    private bool validSetup;
+
+    public bool CanDig => panelOpen && currentSpot != null && !closingAfterRing && !rewardPending && !PauseController.IsGamePaused;
 
     private int ringSpotID = -1;
 
@@ -69,7 +81,25 @@ public class MudSearchManager : MonoBehaviour
         Instance = this;
     }
 
-    void Start()
+    private void OnEnable()
+    {
+        StoryState.Changed += SyncStory;
+    }
+
+    private void OnDisable()
+    {
+        StoryState.Changed -= SyncStory;
+        StopAllCoroutines();
+        CloseSearch();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
+    }
+
+    private void Start()
     {
         if (searchPanel != null)
             searchPanel.SetActive(false);
@@ -77,43 +107,118 @@ public class MudSearchManager : MonoBehaviour
         if (instructionsPanel != null)
             instructionsPanel.SetActive(false);
 
+        validSetup = searchPanel != null && instructionsPanel != null && searchArea != null && mudPatchPrefab != null && mudPatchPrefab.GetComponent<MudPatchUI>() != null && mudPatchPrefab.GetComponent<RectTransform>() != null && ringInventoryPrefab != null && ringInventoryPrefab.GetComponent<Item>() != null && searchSpots != null && searchSpots.Length > 0;
+        HashSet<int> ids = new();
+
+        if (searchSpots != null)
+            foreach (MudSearchSpot spot in searchSpots)
+            {
+                if (spot == null || spot.SpotID < 0 || !ids.Add(spot.SpotID))
+                    validSetup = false;
+
+                if (spot != null)
+                {
+                    if (spot.WouldHideManager(transform))
+                        validSetup = false;
+                    else
+                        spot.ApplyState(false, false);
+                }
+            }
+
+        if (!validSetup)
+            Debug.LogError("Mud setup needs valid UI, prefabs and unique non-negative Spot IDs. Keep the manager outside the spots and their visuals.", this);
+
         if (startQuestAutomaticallyForTesting)
-            BeginQuest();
+            Debug.LogWarning("Automatic mud testing is no longer used. Accept Q2 through dialogue to start it.", this);
+
+        initialized = true;
+        SyncStory();
+    }
+
+    private void SyncStory()
+    {
+        StoryState state = StoryState.Instance;
+
+        if (!initialized || !validSetup || syncing || state == null || !state.IsReady)
+            return;
+
+        syncing = true;
+
+        try
+        {
+            ringFound = state.HasFlag(ringFoundFlag);
+            questActive = state.HasFlag(questStartedFlag) && !state.HasFlag(questCompleteFlag);
+            ringSpotID = -1;
+
+            foreach (MudSearchSpot spot in searchSpots)
+                if (state.HasFlag(ringLocationPrefix + spot.SpotID))
+                {
+                    if (ringSpotID >= 0)
+                    {
+                        Debug.LogError("More than one saved ring location exists. Check the Q2 ring-location flags.", this);
+                        questActive = false;
+                        break;
+                    }
+
+                    ringSpotID = spot.SpotID;
+                }
+
+            if (questActive && !ringFound && ringSpotID < 0)
+            {
+                List<MudSearchSpot> candidates = new();
+
+                foreach (MudSearchSpot spot in searchSpots)
+                    if (!state.HasFlag(clearedSpotPrefix + spot.SpotID))
+                        candidates.Add(spot);
+
+                if (candidates.Count > 0)
+                {
+                    ringSpotID = candidates[UnityEngine.Random.Range(0, candidates.Count)].SpotID;
+                    state.SetFlag(ringLocationPrefix + ringSpotID);
+                }
+                else
+                {
+                    questActive = false;
+                    Debug.LogError("No uncleared mud spot remains for the ring. Check the saved Q2 flags.", this);
+                }
+            }
+
+            foreach (MudSearchSpot spot in searchSpots)
+            {
+                bool cleared = state.HasFlag(clearedSpotPrefix + spot.SpotID);
+                spot.ApplyState(cleared, questActive && !ringFound && !cleared);
+            }
+
+            if (panelOpen && (!questActive || ringFound || currentSpot == null || currentSpot.IsCleared) && !closingAfterRing)
+            {
+                StopAllCoroutines();
+                CloseSearch();
+            }
+        }
+        finally
+        {
+            syncing = false;
+        }
     }
 
     public void BeginQuest()
     {
-        if (questActive)
-            return;
-
-        questActive = true;
-
-        ChooseRingLocation();
-
-        Debug.Log("Mud quest started. Ring is hidden in spot: " + ringSpotID);
+        SyncStory();
     }
 
-    private void ChooseRingLocation()
+    public void RecordClearedSpot(MudSearchSpot spot)
     {
-        List<MudSearchSpot> validSpots = new List<MudSearchSpot>();
-
-        foreach (MudSearchSpot spot in searchSpots)
-            if (spot != null)
-                validSpots.Add(spot);
-
-        if (validSpots.Count == 0)
-        {
-            Debug.LogError("MudSearchManager has no search spots!");
+        if (spot == null || !questActive || spot.SpotID == ringSpotID || StoryState.Instance == null || !StoryState.Instance.IsReady)
             return;
-        }
 
-        int randomIndex = UnityEngine.Random.Range(0, validSpots.Count);
-
-        ringSpotID = validSpots[randomIndex].SpotID;
+        StoryState.Instance.SetFlag(clearedSpotPrefix + spot.SpotID);
     }
 
     public bool CanSearch(MudSearchSpot spot)
     {
+        if (!validSetup || StoryState.Instance == null || !StoryState.Instance.IsReady || PauseController.IsGamePaused || StoryCutsceneController.IsPlaying || RoomTravelController.IsTravelling || NPC.ActiveNPC != null || PlayerFreeze.Instance == null || PlayerFreeze.Instance.IsFrozen)
+            return false;
+
         if (!questActive)
             return false;
 
@@ -144,6 +249,7 @@ public class MudSearchManager : MonoBehaviour
         panelOpen = true;
 
         PlayerFreeze.Instance.FreezePlayer();
+        ownsFreeze = true;
 
         if (!instructionsSeen)
         {
@@ -192,7 +298,9 @@ public class MudSearchManager : MonoBehaviour
     private void GeneratePatches()
     {
         generatedPositions.Clear();
-        int patchCount = UnityEngine.Random.Range(minimumPatchCount, maximumPatchCount + 1);
+        int minimum = Mathf.Max(1, minimumPatchCount);
+        int maximum = Mathf.Max(minimum, maximumPatchCount);
+        int patchCount = UnityEngine.Random.Range(minimum, maximum + 1);
 
         patchesRemaining = patchCount;
 
@@ -224,7 +332,7 @@ public class MudSearchManager : MonoBehaviour
     {
         bool shouldContainJunk = UnityEngine.Random.value <= junkChance;
 
-        if (shouldContainJunk && junkOptions.Length > 0)
+        if (shouldContainJunk && junkOptions != null && junkOptions.Length > 0)
         {
             int junkIndex = UnityEngine.Random.Range(0, junkOptions.Length);
             BuriedJunkOption junk = junkOptions[junkIndex];
@@ -277,6 +385,9 @@ public class MudSearchManager : MonoBehaviour
 
     public void PatchCleared(bool containsRing, string resultName)
     {
+        if (!CanDig)
+            return;
+
         patchesRemaining--;
 
         if (containsRing)
@@ -297,7 +408,10 @@ public class MudSearchManager : MonoBehaviour
         }
 
         if (patchesRemaining <= 0 && !closingAfterRing)
+        {
+            closingAfterRing = true;
             StartCoroutine(FinishSpotAfterDelay());
+        }
     }
 
     private void FindRing()
@@ -305,16 +419,20 @@ public class MudSearchManager : MonoBehaviour
         if (ringFound)
             return;
 
-        bool addedToInventory = InventoryController.Instance.AddItem(ringInventoryPrefab);
+        bool addedToInventory = InventoryController.Instance != null && InventoryController.Instance.AddItem(ringInventoryPrefab);
 
         if (!addedToInventory)
         {
-            SetStatus("You found the ring, but your inventory is full!");
+            rewardPending = true;
+            closingAfterRing = true;
+            SetStatus("Free an inventory slot, then search this spot again to claim the ring.");
+            StartCoroutine(CloseAfterFindingRing());
             return;
         }
 
         ringFound = true;
         closingAfterRing = true;
+        StoryState.Instance.SetFlag(ringFoundFlag);
 
         Item ringItem = ringInventoryPrefab.GetComponent<Item>();
 
@@ -327,9 +445,6 @@ public class MudSearchManager : MonoBehaviour
         Debug.Log("Wedding ring found!");
 
         StartCoroutine(CloseAfterFindingRing());
-
-        // Later:
-        // DialogueState.Instance.SetFlag("ring_found");
     }
 
     private IEnumerator CloseAfterFindingRing()
@@ -348,24 +463,46 @@ public class MudSearchManager : MonoBehaviour
         CloseSearch();
     }
 
+    public void CancelSearch()
+    {
+        StopAllCoroutines();
+        CloseSearch();
+    }
+
     private void CloseSearch()
     {
-        searchPanel.SetActive(false);
-        instructionsPanel.SetActive(false);
+        if (searchPanel != null)
+            searchPanel.SetActive(false);
+
+        if (instructionsPanel != null)
+            instructionsPanel.SetActive(false);
 
         ClearOldPatches();
 
         panelOpen = false;
+        rewardPending = false;
         closingAfterRing = false;
         currentSpot = null;
 
-        PlayerFreeze.Instance.UnfreezePlayer();
+        if (ownsFreeze && PlayerFreeze.Instance != null)
+            PlayerFreeze.Instance.UnfreezePlayer();
+
+        ownsFreeze = false;
+
+        if (SaveController.Instance != null)
+            SaveController.Instance.RequestSave();
     }
 
     private void ClearOldPatches()
     {
+        if (searchArea == null)
+            return;
+
         foreach (Transform child in searchArea)
+        {
+            child.gameObject.SetActive(false);
             Destroy(child.gameObject);
+        }
     }
 
     private void SetStatus(string message)
@@ -383,6 +520,6 @@ public class MudSearchManager : MonoBehaviour
 
     public void CompleteQuest()
     {
-        questActive = false;
+        SyncStory();
     }
 }

@@ -51,6 +51,9 @@ public class Quest6Barnacle : MonoBehaviour
 
     void Update()
     {
+        if (PauseController.IsGamePaused)
+            return;
+
         if (falling)
         {
             UpdateFalling();
