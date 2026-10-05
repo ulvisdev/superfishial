@@ -43,7 +43,7 @@ MonoBehaviour:
     nextDialogueIndexes: 0100000002000000
     givesQuest: 0100
     storyRules: []
-  endsDialogue: 01010101
+  endsDialogue: 00010101
   voiceSound: []
   repeatingVoice: 00000000
   RandomPitch: 00000000
@@ -53,7 +53,7 @@ MonoBehaviour:
   - 0
   - 0
   questInProgressIndex: 3
-  questCompletedIndex: 0
+  questCompletedIndex: -1
   quest: {fileID: 11400000, guid: f2aa3943885489043907d335b728e0a8, type: 2}
   startRules: []
   lineActions: []

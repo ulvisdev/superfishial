@@ -70,7 +70,7 @@ public class DialogueTextEffects : MonoBehaviour
         text.text = processedText;
 
         TMP_TextInfo info = text.GetTextInfo(processedText);
-        Debug.Log("TMP PARSED COUNT: " + info.characterCount);
+        //Debug.Log("TMP PARSED COUNT: " + info.characterCount);
 
         revealTimes = new float[info.characterCount];
 

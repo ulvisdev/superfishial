@@ -49,6 +49,26 @@ MonoBehaviour:
   quest: {fileID: 0}
   startRules:
   - condition:
+      requiredFlags: []
+      forbiddenFlags:
+      - npc_intro_complete
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 0}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 0
+    completedFlag: npc_intro_complete
+    handInOnEnd: 0
+  - condition:
+      requiredFlags:
+      - npc_intro_complete
+      forbiddenFlags: []
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 0}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 1
+    completedFlag: 
+    handInOnEnd: 0
+  - condition:
       requiredFlags:
       - quest3_complete
       forbiddenFlags:
@@ -56,7 +76,7 @@ MonoBehaviour:
       requiredActiveQuest: {fileID: 0}
       requiredReadyQuest: {fileID: 0}
       requiredHandedInQuest: {fileID: 0}
-    startIndex: 4
+    startIndex: 3
     completedFlag: rhodes_housecall_followup_done
     handInOnEnd: 0
   lineActions: []
