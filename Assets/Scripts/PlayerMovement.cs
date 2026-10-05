@@ -819,6 +819,7 @@ public class PlayerMovement : MonoBehaviour
         boostSpinRemaining = boostSpinDuration;
 
         EmitBoostBubbles(bubbleBurstCount, transform.position, direction, true);
+        SoundEffectManager.Play("SwimBoost", true);
     }
 
     private void CancelBoost()
