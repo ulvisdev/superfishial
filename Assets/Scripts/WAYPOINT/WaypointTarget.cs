@@ -12,7 +12,24 @@ public class WaypointTarget : MonoBehaviour
     [SerializeField] private int priority;
     [SerializeField] private bool showOnScreen = true;
 
-    public bool Visible => visible;
+    [Header("Story")]
+    [SerializeField] private bool storyControlsVisibility;
+    [SerializeField] private StoryCondition condition = new();
+    [SerializeField] private string roomID;
+
+    public bool Visible
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(roomID) && (RoomTravelController.Instance == null || RoomTravelController.Instance.CurrentRoomID != roomID))
+                return false;
+
+            if (!storyControlsVisibility)
+                return visible;
+
+            return StoryState.Instance != null && StoryState.Instance.IsReady && (condition == null || condition.IsMet());
+        }
+    }
     public string Label => label;
     public int Priority => priority;
     public bool ShowOnScreen => showOnScreen;
@@ -32,6 +49,7 @@ public class WaypointTarget : MonoBehaviour
     public void Show()
     {
         visible = true;
+
         if (isActiveAndEnabled)
         {
             Targets.Remove(this);

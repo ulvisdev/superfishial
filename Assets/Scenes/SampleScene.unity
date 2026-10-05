@@ -2178,6 +2178,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 1, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!1001 &10385055
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -81862,6 +81870,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 6
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 2ff19ac709d11224d9509838b1386bc8, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -121079,7 +121091,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 25
+  field of view: 10.81
   orthographic: 0
   orthographic size: 2.8125
   m_Depth: 0
@@ -121105,8 +121117,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 533658346}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.14176513, y: 0, z: 0, w: 0.98990035}
-  m_LocalPosition: {x: -169.416, y: -1.9910002, z: -180.353}
+  m_LocalRotation: {x: 0.026176924, y: 0, z: 0, w: 0.99965733}
+  m_LocalPosition: {x: -169.23378, y: -5.652, z: -174.83}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -151989,7 +152001,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &675065407
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -184293,6 +184305,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 1.2, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!114 &820804524
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -202022,6 +202042,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 1.75, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!1001 &906509181
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -217228,6 +217256,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 0.6, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!114 &967326416
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -217531,9 +217567,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 5c27494b1ed26b84f95ec5d23c3e8386, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -220113,6 +220149,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 1.2, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!114 &985095043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -235409,7 +235453,7 @@ Transform:
   m_GameObject: {fileID: 1043066270}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -227.5, y: -1.7481879, z: -199.94}
+  m_LocalPosition: {x: -91.61, y: 0.017, z: -147.54}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -269068,6 +269112,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 1.2, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!114 &1198798575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -282065,6 +282117,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 1.2, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!1001 &1251745870
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -300062,6 +300122,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 0.7, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!1001 &1339532908
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -353940,20 +354008,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldCamera: {fileID: 533658350}
-  player: {fileID: 1633555443}
   canvas: {fileID: 856768702}
   screenArea: {fileID: 1591730766}
   markerRoot: {fileID: 1110281594}
   onScreenIcon: {fileID: 152859031}
   offScreenArrow: {fileID: 194719178}
   distanceText: {fileID: 916805994}
-  edgePadding: {x: 90, y: 65}
-  metersPerUnit: 1
-  arrowAngleOffset: -90
-  textGapPixels: 2.5
   screenMarginPixels: 8
-  showLabel: 0
   hideWhenPaused: 1
+  hideBehindObstacles: 0
+  obstructionLayers:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!1001 &1592898224
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -356940,15 +357006,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: be8c00aa462db694a9263534591d2466, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 63.12942
+      value: 64.632
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: be8c00aa462db694a9263534591d2466, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.1368535
+      value: 1.74
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: be8c00aa462db694a9263534591d2466, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -102.79268
+      value: -102.083
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: be8c00aa462db694a9263534591d2466, type: 3}
       propertyPath: m_LocalRotation.w
@@ -374178,6 +374244,14 @@ MonoBehaviour:
   worldOffset: {x: 0, y: 0.6, z: 0}
   priority: 0
   showOnScreen: 1
+  storyControlsVisibility: 0
+  condition:
+    requiredFlags: []
+    forbiddenFlags: []
+    requiredActiveQuest: {fileID: 0}
+    requiredReadyQuest: {fileID: 0}
+    requiredHandedInQuest: {fileID: 0}
+  roomID: 
 --- !u!1001 &1680329641
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -410750,7 +410824,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1851983761
 RectTransform:
   m_ObjectHideFlags: 0
@@ -474760,7 +474834,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2143620154
 MonoBehaviour:
   m_ObjectHideFlags: 0
