@@ -1,0 +1,101 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac8226f1d84236643b0ae3791486efe4, type: 3}
+  m_Name: SketchySalQ4
+  m_EditorClassIdentifier: 
+  DialogueContext: 
+  npcName:
+  - Sketchy Fish
+  - Sketchy Fish
+  - Sketchy Fish
+  - Sketchy Fish
+  - Sketchy Fish
+  npcPortrait: []
+  dialogueLine:
+  - introduction + mention of failed descend
+  - offers the treatment, accept/decline
+  - Right, lets get started
+  - Come back if you change your mind
+  - short repeat conversation
+  autoProgressLine: 0000000000
+  autoProgressDelay:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  typingSpeed:
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  choices:
+  - dialogueIndex: 1
+    choices:
+    - yuh
+    - nuh
+    nextDialogueIndexes: 0200000003000000
+    givesQuest: 0000
+    storyRules: []
+  endsDialogue: 0000010101
+  voiceSound: []
+  repeatingVoice: 0000000000
+  RandomPitch: 0000000000
+  voicePitch:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  questInProgressIndex: 0
+  questCompletedIndex: 0
+  quest: {fileID: 0}
+  startRules:
+  - condition:
+      requiredFlags:
+      - treatment_complete
+      forbiddenFlags: []
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 0}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 4
+    completedFlag: 
+    handInOnEnd: 0
+  - condition:
+      requiredFlags:
+      - met_sketchyfish
+      forbiddenFlags:
+      - treatment_complete
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 0}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 1
+    completedFlag: 
+    handInOnEnd: 0
+  - condition:
+      requiredFlags:
+      - doc_depth_warning_complete
+      forbiddenFlags:
+      - met_sketchyfish
+      - treatment_complete
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 0}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 0
+    completedFlag: met_sketchyfish
+    handInOnEnd: 0
+  lineActions:
+  - dialogueIndex: 2
+    flagToSet: treatment_requested
+  handInOnCompletedDialogueEnd: 1
+  questHandedInIndex: -1

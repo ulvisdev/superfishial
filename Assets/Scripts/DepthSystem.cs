@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Globalization;
 
-// [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CharacterController))]
 public class DepthSystem : MonoBehaviour
 {
@@ -13,6 +12,17 @@ public class DepthSystem : MonoBehaviour
     [SerializeField] private Transform waterSurfaceReference;
     [SerializeField] private float metresPerUnityUnit = 1f;
     [SerializeField] private float maxSafeDepth = 20f;
+
+    [Header("Story Rescue")]
+    [SerializeField] private string exteriorRoomID = "worldspawn";
+    [SerializeField] private string rescueRoomID = "doc_office";
+    [SerializeField] private Transform rescueArrival;
+    [SerializeField] private string rescueQuestFlag = "quest4_started";
+    [SerializeField] private string rescuedFlag = "first_descend_failed";
+
+    [Header("Treatment")]
+    [SerializeField] private string treatmentFlag = "treatment_complete";
+    [SerializeField] private float treatedMaxSafeDepth = 120f;
 
     [Header("Depth Danger")]
     [SerializeField] private float gracePeriod = 0.5f;
@@ -29,8 +39,6 @@ public class DepthSystem : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private Slider depthSlider;
-    // [SerializeField] private TMP_Text currentDepthText;
-    // [SerializeField] private TMP_Text depthLimitText;
     [SerializeField] private TMP_Text depthText;
     [SerializeField] private TMP_Text dangerText;
     [SerializeField] private CanvasGroup blackoutCanvasGroup;
@@ -40,12 +48,17 @@ public class DepthSystem : MonoBehaviour
     [SerializeField] private float minimumDangerTimeForBreathFlash = 1.25f;
     [SerializeField, Range(0f, 1f)] private float breathFlashAlpha = 0.35f;
 
-    //private Rigidbody rb;
     private float dangerTimer;
 
     private bool wasTooDeep;
     private bool pendingBreathFlash;
     private bool isTransitioning;
+
+    private float originalMaxSafeDepth;
+    private PlayerFreeze rescueFreeze;
+    private bool ownsRescueControl;
+    private bool previousPause;
+    private bool previousMovement;
 
     private Tween blackoutTween;
     private Sequence breathSequence;
@@ -56,7 +69,7 @@ public class DepthSystem : MonoBehaviour
 
     private void Awake()
     {
-        //rb = GetComponent<Rigidbody>();
+        originalMaxSafeDepth = maxSafeDepth;
 
         if (playerMovementController == null)
             playerMovementController = GetComponent<PlayerMovement>();
@@ -85,18 +98,71 @@ public class DepthSystem : MonoBehaviour
         UpdateDepthUI();
     }
 
+    private void OnEnable()
+    {
+        StoryState.Changed += ApplyTreatment;
+        ApplyTreatment();
+    }
+
+    private void Start()
+    {
+        ApplyTreatment();
+    }
+
+    private void ApplyTreatment()
+    {
+        StoryState state = StoryState.Instance;
+
+        if (state == null || !state.IsReady)
+            return;
+
+        bool treated = state.HasFlag(treatmentFlag);
+        SetMaxSafeDepth(treated ? treatedMaxSafeDepth : originalMaxSafeDepth);
+
+        if (treated && !state.HasFlag("can_enter_depths"))
+            state.SetFlag("can_enter_depths");
+    }
+
+    private bool CanEvaluatePressure()
+    {
+        if (StoryState.Instance == null || !StoryState.Instance.IsReady || SaveController.Instance == null || !SaveController.Instance.IsReady || SaveController.Instance.IsLoading)
+            return false;
+
+        if (PauseController.IsGamePaused || StoryCutsceneController.IsPlaying || RoomTravelController.IsTravelling || NPC.ActiveNPC != null || Time.timeScale <= 0f)
+            return false;
+
+        if (PlayerFreeze.Instance != null && PlayerFreeze.Instance.IsFrozen)
+            return false;
+
+        return RoomTravelController.Instance != null && RoomTravelController.Instance.CurrentRoomID == exteriorRoomID;
+    }
+
     private void Update()
     {
         CalculateDepth();
         UpdateDepthUI();
 
-        if (!isTransitioning)
-            UpdateDepthDanger();
+        if (isTransitioning)
+            return;
+
+        if (!CanEvaluatePressure())
+        {
+            dangerTimer = 0f;
+            wasTooDeep = false;
+            pendingBreathFlash = false;
+            blackoutCanvasGroup.alpha = 0f;
+
+            if (dangerText != null)
+                dangerText.gameObject.SetActive(false);
+
+            return;
+        }
+
+        UpdateDepthDanger();
     }
 
     private void CalculateDepth()
     {
-        // float distanceBelowSurface = waterSurfaceReference.position.y - rb.position.y;
         float distanceBelowSurface = waterSurfaceReference.position.y - transform.position.y;
 
         CurrentDepth = Mathf.Max(0f, distanceBelowSurface * metresPerUnityUnit);
@@ -104,10 +170,8 @@ public class DepthSystem : MonoBehaviour
 
     private void UpdateDepthUI()
     {
-        depthText.text = $"Depth: {CurrentDepth.ToString("0.0", CultureInfo.InvariantCulture)}m / {maxSafeDepth.ToString("0.#", CultureInfo.InvariantCulture)}m";
-
-        // if (depthLimitText != null)
-        //     depthLimitText.text = $"Limit: {maxSafeDepth:0.#} m";
+        if (depthText != null)
+            depthText.text = $"Depth: {CurrentDepth.ToString("0.0", CultureInfo.InvariantCulture)}m / {maxSafeDepth.ToString("0.#", CultureInfo.InvariantCulture)}m";
 
         if (depthSlider != null)
         {
@@ -159,13 +223,11 @@ public class DepthSystem : MonoBehaviour
         isTransitioning = true;
         blackoutCanvasGroup.alpha = 1f;
 
-        // movement still works while the screen is black
-
         float remainingChance = lastChanceDuration;
 
         while (remainingChance > 0f)
         {
-            if (!IsTooDeep)
+            if (!CanEvaluatePressure() || !IsTooDeep)
             {
                 yield return RecoverFromBlackout();
                 yield break;
@@ -175,7 +237,7 @@ public class DepthSystem : MonoBehaviour
             yield return null;
         }
 
-        if (!IsTooDeep)
+        if (!CanEvaluatePressure() || !IsTooDeep)
         {
             yield return RecoverFromBlackout();
             yield break;
@@ -184,20 +246,36 @@ public class DepthSystem : MonoBehaviour
         if (dangerText != null)
             dangerText.gameObject.SetActive(false);
 
-        if (playerMovementController != null)
-        {
+        previousPause = PauseController.IsGamePaused;
+        previousMovement = playerMovementController.IsMovementEnabled;
+        rescueFreeze = PlayerFreeze.Instance;
+        ownsRescueControl = true;
+
+        if (rescueFreeze != null)
+            rescueFreeze.FreezePlayer();
+        else
             playerMovementController.SetMovementEnabled(false);
-            playerMovementController.StopImmediately();
+
+        PauseController.SetPause(true);
+        playerMovementController.StopImmediately();
+        StoryState state = StoryState.Instance;
+        RoomTravelController travel = RoomTravelController.Instance;
+        bool storyRescue = state != null && state.HasFlag(rescueQuestFlag) && !state.HasFlag(treatmentFlag);
+        bool rescuedAtClinic = false;
+
+        if (storyRescue && travel != null)
+            rescuedAtClinic = travel.Place(rescueRoomID, rescueArrival);
+
+        if (!rescuedAtClinic)
+        {
+            if (storyRescue)
+                Debug.LogError("Story rescue could not reach Doc Cat. Check Rescue Room ID and RoomTravelController Player.", this);
+
+            playerMovementController.TeleportTo(homeRespawnPoint.position);
+
+            if (travel != null)
+                travel.SelectRoom(exteriorRoomID);
         }
-
-        // rb.linearVelocity = Vector3.zero;
-        // rb.angularVelocity = Vector3.zero;
-        // rb.position = homeRespawnPoint.position;
-        // rb.rotation = Quaternion.identity;
-
-        // Physics.SyncTransforms();
-
-        playerMovementController.TeleportTo(homeRespawnPoint.position);
 
         dangerTimer = 0f;
         wasTooDeep = false;
@@ -206,16 +284,10 @@ public class DepthSystem : MonoBehaviour
         CalculateDepth();
         UpdateDepthUI();
 
-        // yield return new WaitForFixedUpdate();
         yield return null;
 
         if (postTeleportBlackHold > 0f)
             yield return new WaitForSecondsRealtime(postTeleportBlackHold);
-
-        // gameplay resumes before the screen fades back in
-
-        if (playerMovementController != null)
-            playerMovementController.SetMovementEnabled(true);
 
         blackoutTween?.Kill();
         blackoutTween = blackoutCanvasGroup.DOFade(0f, fadeFromBlackDuration).SetEase(Ease.InOutSine).SetUpdate(true);
@@ -226,6 +298,27 @@ public class DepthSystem : MonoBehaviour
         blackoutCanvasGroup.alpha = 0f;
         blackoutTween = null;
         isTransitioning = false;
+        ReleaseRescueControl();
+
+        if (rescuedAtClinic)
+            state.SetFlag(rescuedFlag);
+
+        if (SaveController.Instance != null)
+            SaveController.Instance.RequestSave();
+    }
+
+    private void ReleaseRescueControl()
+    {
+        if (!ownsRescueControl)
+            return;
+
+        ownsRescueControl = false;
+        PauseController.SetPause(previousPause);
+
+        if (rescueFreeze != null)
+            rescueFreeze.UnfreezePlayer();
+        else if (playerMovementController != null)
+            playerMovementController.SetMovementEnabled(previousMovement);
     }
 
     private IEnumerator RecoverFromBlackout()
@@ -259,8 +352,7 @@ public class DepthSystem : MonoBehaviour
 
         breathSequence = DOTween.Sequence();
         for (int i = 0; i < 4; i++)
-            breathSequence.Append(breathFlashCanvasGroup.DOFade(breathFlashAlpha, 0.25f)
-                .SetEase(Ease.Linear)).Append(breathFlashCanvasGroup.DOFade(0f, 0.3f).SetEase(Ease.Linear));
+            breathSequence.Append(breathFlashCanvasGroup.DOFade(breathFlashAlpha, 0.25f).SetEase(Ease.Linear)).Append(breathFlashCanvasGroup.DOFade(0f, 0.3f).SetEase(Ease.Linear));
         breathSequence.SetUpdate(true);
     }
 
@@ -278,12 +370,23 @@ public class DepthSystem : MonoBehaviour
 
     private void OnDisable()
     {
+        StoryState.Changed -= ApplyTreatment;
+        StopAllCoroutines();
         blackoutTween?.Kill();
         breathSequence?.Kill();
+        isTransitioning = false;
+        ReleaseRescueControl();
+
+        if (blackoutCanvasGroup != null)
+            blackoutCanvasGroup.alpha = 0f;
+
+        if (breathFlashCanvasGroup != null)
+            breathFlashCanvasGroup.alpha = 0f;
     }
 
     private void OnValidate()
     {
+        treatedMaxSafeDepth = Mathf.Max(1f, treatedMaxSafeDepth);
         metresPerUnityUnit = Mathf.Max(0.01f, metresPerUnityUnit);
         maxSafeDepth = Mathf.Max(1f, maxSafeDepth);
         gracePeriod = Mathf.Max(0f, gracePeriod);

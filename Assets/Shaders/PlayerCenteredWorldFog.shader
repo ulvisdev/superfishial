@@ -36,6 +36,7 @@ Shader "Superfishial/PlayerCenteredWorldFog"
 
             float4 _SFFogPlayerPosition;
             float _SFFogEnabled;
+            float _SFStoryDepthVisibility;
 
             half4 Frag(Varyings input) : SV_Target
             {
@@ -62,11 +63,11 @@ Shader "Superfishial/PlayerCenteredWorldFog"
                 #endif
 
                 float3 worldPosition = ComputeWorldSpacePosition(screenUV, depth, UNITY_MATRIX_I_VP);
-                // float playerDistance = distance(worldPosition, _SFFogPlayerPosition.xyz);
 
                 float3 offset = worldPosition - _SFFogPlayerPosition.xyz;
                 offset.y *= offset.y < 0.0 ? 2.0 : 1.0;
-                float playerDistance = length(offset);
+                float visibility = _SFStoryDepthVisibility > 0.0 ? _SFStoryDepthVisibility : 1.0;
+                float playerDistance = length(offset) / visibility;
 
                 float fogRange = max(_FogEnd - _FogStart, 0.001);
                 float fogAmount = saturate((playerDistance - _FogStart) / fogRange);

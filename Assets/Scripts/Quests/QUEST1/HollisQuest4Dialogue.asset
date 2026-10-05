@@ -1,0 +1,75 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac8226f1d84236643b0ae3791486efe4, type: 3}
+  m_Name: HollisQuest4Dialogue
+  m_EditorClassIdentifier: 
+  DialogueContext: 
+  npcName:
+  - Hollis
+  - Hollis
+  - Hollis
+  - Hollis
+  - Hollis
+  - Hollis
+  npcPortrait: []
+  dialogueLine:
+  - a week ago was driving the board near the edge, doing sick flips
+  - but then it fell into the depths. cant go that deep myself
+  - im pretty sure its somewhere in the junkyard
+  - well... at least i tried to ask
+  - u find it yet?
+  - thankuuu
+  - yo wassup my bro who rescued my sick board
+  autoProgressLine: 00000000000000
+  autoProgressDelay:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  typingSpeed:
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
+  choices:
+  - dialogueIndex: 1
+    choices:
+    - yuh
+    - nuh
+    nextDialogueIndexes: 0200000003000000
+    givesQuest: 0100
+    storyRules: []
+  endsDialogue: 00000101010101
+  voiceSound: []
+  repeatingVoice: 00000000000000
+  RandomPitch: 00000000000000
+  voicePitch:
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  - 0
+  questInProgressIndex: 4
+  questCompletedIndex: 5
+  quest: {fileID: 11400000, guid: c1aa8b1751ea09e42b5258675d333147, type: 2}
+  startRules: []
+  lineActions: []
+  handInOnCompletedDialogueEnd: 1
+  questHandedInIndex: 6

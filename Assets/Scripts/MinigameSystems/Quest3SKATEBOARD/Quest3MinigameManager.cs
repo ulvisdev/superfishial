@@ -24,6 +24,15 @@ public class Quest3MinigameManager : MonoBehaviour
 
     [SerializeField] private QuestObjectiveCompletion questObjectiveCompletion;
 
+    [Header("Story")]
+    [SerializeField] private string startedFlag = "quest4_started";
+    [SerializeField] private string accessFlag = "can_enter_depths";
+    [SerializeField] private string collectedFlag = "skateboard_found";
+    [SerializeField] private string handedInFlag = "quest4_complete";
+    [SerializeField] private string pendingFlag = "skateboard_reward_pending";
+
+    private PlayerFreeze freeze;
+    private bool ownsFreeze;
     private bool running;
     private bool completed;
     private bool rewardPending;
@@ -37,22 +46,80 @@ public class Quest3MinigameManager : MonoBehaviour
             inventoryFullPanel.SetActive(false);
     }
 
+    private void OnEnable()
+    {
+        StoryState.Changed += RefreshStory;
+        RefreshStory();
+    }
+
+    private void Start()
+    {
+        RefreshStory();
+    }
+
+    private void RefreshStory()
+    {
+        StoryState state = StoryState.Instance;
+
+        if (state == null || !state.IsReady)
+            return;
+
+        completed = state.HasFlag(collectedFlag) || state.HasFlag(handedInFlag);
+        rewardPending = !completed && state.HasFlag(pendingFlag);
+
+        if (completed)
+            HideWorldObjects();
+    }
+
+    private bool StoryAllowsMinigame()
+    {
+        StoryState state = StoryState.Instance;
+        return state != null && state.IsReady && state.HasFlag(startedFlag) && state.HasFlag(accessFlag) && !state.HasFlag(collectedFlag) && !state.HasFlag(handedInFlag);
+    }
+
+    private void FreezePlayer()
+    {
+        if (ownsFreeze)
+            return;
+
+        freeze = PlayerFreeze.Instance;
+
+        if (freeze == null)
+            return;
+
+        freeze.FreezePlayer();
+        ownsFreeze = true;
+    }
+
+    private void ReleasePlayer()
+    {
+        if (!ownsFreeze)
+            return;
+
+        ownsFreeze = false;
+
+        if (freeze != null)
+            freeze.UnfreezePlayer();
+    }
+
     public void OpenInstructions()
     {
-        if (PauseController.IsGamePaused)
+        if (!StoryAllowsMinigame() || PauseController.IsGamePaused || StoryCutsceneController.IsPlaying || RoomTravelController.IsTravelling || NPC.ActiveNPC != null)
+            return;
+
+        if (PlayerFreeze.Instance != null && PlayerFreeze.Instance.IsFrozen)
             return;
 
         if (completed || running || instructionsPanel.activeSelf)
             return;
+
+        FreezePlayer();
 
         if (rewardPending)
         {
             CompleteMinigame();
             return;
         }
-
-        if (PlayerFreeze.Instance != null)
-            PlayerFreeze.Instance.FreezePlayer();
 
         minigamePanel.SetActive(false);
         instructionsPanel.SetActive(true);
@@ -63,7 +130,7 @@ public class Quest3MinigameManager : MonoBehaviour
         if (PauseController.IsGamePaused)
             return;
 
-        if (running || completed || rewardPending)
+        if (!StoryAllowsMinigame() || !instructionsPanel.activeSelf || running || completed || rewardPending)
             return;
 
         instructionsPanel.SetActive(false);
@@ -107,8 +174,7 @@ public class Quest3MinigameManager : MonoBehaviour
         instructionsPanel.SetActive(false);
         minigamePanel.SetActive(false);
 
-        if (PlayerFreeze.Instance != null)
-            PlayerFreeze.Instance.UnfreezePlayer();
+        ReleasePlayer();
 
         if (!completed && minigameTrigger != null)
         {
@@ -126,11 +192,13 @@ public class Quest3MinigameManager : MonoBehaviour
 
         rewardPending = true;
         StopRun();
+        StoryState.Instance.SetFlag(pendingFlag);
 
         if (InventoryController.Instance == null || skateboardInventoryPrefab == null)
         {
-            Debug.LogWarning("Quest 3 reward is missing its inventory controller or prefab.");
+            Debug.LogWarning("Skateboard reward is missing its inventory controller or prefab.");
             EndMinigame();
+            SaveController.Instance?.RequestSave();
             return;
         }
 
@@ -141,21 +209,36 @@ public class Quest3MinigameManager : MonoBehaviour
             if (inventoryFullPanel != null)
                 inventoryFullPanel.SetActive(true);
 
-            Debug.LogWarning("Inventory full. Free a slot, then enter the Quest 3 trigger again to claim the skateboard.");
+            Debug.LogWarning("Inventory full. Free a slot, then enter the skateboard trigger again to claim the skateboard.");
+            SaveController.Instance?.RequestSave();
             return;
         }
 
         completed = true;
         rewardPending = false;
 
-        if (questObjectiveCompletion != null) 
-            questObjectiveCompletion.CompleteObjective();
-
         EndMinigame();
 
         if (inventoryFullPanel != null)
             inventoryFullPanel.SetActive(false);
 
+        HideWorldObjects();
+        StoryState.Instance.SetFlag(collectedFlag);
+        StoryState.Instance.ClearFlag(pendingFlag);
+
+        if (questObjectiveCompletion != null)
+            questObjectiveCompletion.CompleteObjective();
+
+        SaveController.Instance?.RequestSave();
+
+        Item skateboardItem = skateboardInventoryPrefab.GetComponent<Item>();
+
+        if (skateboardItem != null)
+            skateboardItem.ShowPopUp();
+    }
+
+    private void HideWorldObjects()
+    {
         if (worldSkateboard != null)
             worldSkateboard.SetActive(false);
 
@@ -167,10 +250,13 @@ public class Quest3MinigameManager : MonoBehaviour
 
         if (minigameTrigger != null)
             minigameTrigger.SetActive(false);
+    }
 
-        Item skateboardItem = skateboardInventoryPrefab.GetComponent<Item>();
+    private void OnDisable()
+    {
+        StoryState.Changed -= RefreshStory;
 
-        if (skateboardItem != null)
-            skateboardItem.ShowPopUp();
+        if (running || ownsFreeze)
+            EndMinigame();
     }
 }

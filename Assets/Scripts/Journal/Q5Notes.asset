@@ -45,3 +45,4 @@ MonoBehaviour:
       requiredReadyQuest: {fileID: 0}
       requiredHandedInQuest: {fileID: 0}
     sprite: {fileID: 21300000, guid: 179ad906dde3ecb4d8f6b005503e1e30, type: 3}
+  quest: {fileID: 11400000, guid: 5cc8dcc2c2666bc4c892eebfc099aceb, type: 2}

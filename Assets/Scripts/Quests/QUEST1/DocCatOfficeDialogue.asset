@@ -23,8 +23,14 @@ MonoBehaviour:
   - Hello! U mustve hurt your head.
   - Such a shame innit cuh?
   - Thank u so much for helping me with the ingredients!!!
-  autoProgressLine: 000000
+  - brazer
+  - u lowki nearly died, a good friend of mine brought u back
+  - dont try that again
+  autoProgressLine: 000000000000
   autoProgressDelay:
+  - 0
+  - 0
+  - 0
   - 0
   - 0
   - 0
@@ -32,18 +38,24 @@ MonoBehaviour:
   - 0.05
   - 0.05
   - 0.05
+  - 0.05
+  - 0.05
+  - 0.05
   choices: []
-  endsDialogue: 000101
+  endsDialogue: 000101000001
   voiceSound: []
-  repeatingVoice: 000000
-  RandomPitch: 000000
+  repeatingVoice: 000000000000
+  RandomPitch: 000000000000
   voicePitch:
+  - 0
+  - 0
+  - 0
   - 0
   - 0
   - 0
   questInProgressIndex: 0
   questCompletedIndex: 0
-  quest: {fileID: 11400000, guid: f2aa3943885489043907d335b728e0a8, type: 2}
+  quest: {fileID: 0}
   startRules:
   - condition:
       requiredFlags: []
@@ -54,6 +66,17 @@ MonoBehaviour:
     startIndex: 2
     completedFlag: 
     handInOnEnd: 1
+  - condition:
+      requiredFlags:
+      - first_descend_failed
+      forbiddenFlags:
+      - doc_depth_warning_complete
+      requiredActiveQuest: {fileID: 0}
+      requiredReadyQuest: {fileID: 0}
+      requiredHandedInQuest: {fileID: 0}
+    startIndex: 3
+    completedFlag: doc_depth_warning_complete
+    handInOnEnd: 0
   lineActions: []
   handInOnCompletedDialogueEnd: 1
   questHandedInIndex: -1
